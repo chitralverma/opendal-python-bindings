@@ -1,0 +1,6 @@
+{
+  "ignore": [
+    "**/*.pyi"
+  ],
+  "reportIgnoreCommentWithoutRule": false
+}

@@ -1,0 +1,50 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+[workspace]
+exclude = []
+members = ["opendal-pyo3", "opendal", "services/*"]
+resolver = "2"
+
+[workspace.package]
+authors = ["Apache OpenDAL <dev@opendal.apache.org>"]
+categories = []
+description = "Apache OpenDAL™ Python Binding (workspace)"
+edition = "2024"
+homepage = "https://opendal.apache.org/"
+keywords = []
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/apache/opendal"
+rust-version = "1.85"
+version = "0.47.0"
+
+[workspace.dependencies]
+bytes = "1.10.1"
+dict_derive = "0.6.0"                                                        # TODO: Remove this dependency if not needed
+futures = "0.3"
+jiff = { version = "0.2.15" }
+pyo3 = { version = "0.26.0", features = ["generate-import-lib", "jiff-02"] }
+pyo3-async-runtimes = { version = "0.26.0", features = ["tokio-runtime"] }
+pyo3-stub-gen = { version = "0.17" }
+tokio = "1"
+
+[profile.release]
+codegen-units = 1
+debug = false
+lto = "fat"
+strip = true
