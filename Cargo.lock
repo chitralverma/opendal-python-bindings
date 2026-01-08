@@ -1177,11 +1177,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "opendal_s3_service"
+name = "opendal_fs_service"
 version = "0.47.0"
 dependencies = [
  "opendal-pyo3",
  "opendal-service-fs",
+ "pyo3",
+ "pyo3-stub-gen",
+]
+
+[[package]]
+name = "opendal_s3_service"
+version = "0.47.0"
+dependencies = [
+ "opendal-pyo3",
  "opendal-service-s3",
  "pyo3",
  "pyo3-stub-gen",

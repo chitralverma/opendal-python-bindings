@@ -28,7 +28,7 @@ use pyo3_async_runtimes::tokio::future_into_py;
 
 use crate::*;
 
-fn build_operator(scheme: &str, map: HashMap<String, String>) -> PyResult<ocore::Operator> {
+pub fn build_operator(scheme: &str, map: HashMap<String, String>) -> PyResult<ocore::Operator> {
     let op = ocore::Operator::via_iter(scheme, map).map_err(format_pyerr)?;
     Ok(op)
 }
@@ -701,9 +701,9 @@ impl PyOperator {
 #[gen_stub_pyclass]
 #[pyclass(module = "opendal.operator", subclass)]
 pub struct PyAsyncOperator {
-    core: ocore::Operator,
-    __scheme: String,
-    __map: HashMap<String, String>,
+    pub core: ocore::Operator,
+    pub __scheme: String,
+    pub __map: HashMap<String, String>,
 }
 
 #[gen_stub_pymethods]
