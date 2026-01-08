@@ -1138,7 +1138,6 @@ name = "opendal-python-core"
 version = "0.47.0"
 dependencies = [
  "opendal-pyo3",
- "opendal-service-fs",
  "pyo3",
  "pyo3-stub-gen",
 ]
@@ -1182,6 +1181,7 @@ name = "opendal_s3_service"
 version = "0.47.0"
 dependencies = [
  "opendal-pyo3",
+ "opendal-service-fs",
  "opendal-service-s3",
  "pyo3",
  "pyo3-stub-gen",

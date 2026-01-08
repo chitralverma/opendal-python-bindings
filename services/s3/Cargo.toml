@@ -38,6 +38,7 @@ doc = false
 name = "stub_gen_s3"
 
 [dependencies]
-opendal-pyo3 = { path = "../../opendal-pyo3", features = ["services-s3"] }
+opendal-pyo3 = { path = "../../opendal-pyo3" }
+opendal-service-s3 = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { workspace = true }
 pyo3-stub-gen = { workspace = true }
