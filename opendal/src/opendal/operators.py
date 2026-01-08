@@ -53,4 +53,4 @@ class Operator(PyOperator):
         """Operator for S3 service."""
         import opendal_s3_service
 
-        return opendal_s3_service.S3PyOperator(**kwargs) # pyright: ignore
+        return opendal_s3_service.S3PyOperator(**kwargs)  # pyright: ignore

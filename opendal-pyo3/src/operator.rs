@@ -17,7 +17,6 @@
 
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::time::Duration;
 
 use pyo3::IntoPyObjectExt;
@@ -29,16 +28,13 @@ use pyo3_async_runtimes::tokio::future_into_py;
 
 use crate::*;
 
-pub fn build_operator(
-    scheme: ocore::Scheme,
-    map: HashMap<String, String>,
-) -> PyResult<ocore::Operator> {
+fn build_operator(scheme: &str, map: HashMap<String, String>) -> PyResult<ocore::Operator> {
     let op = ocore::Operator::via_iter(scheme, map).map_err(format_pyerr)?;
     Ok(op)
 }
 
 pub fn build_blocking_operator(
-    scheme: ocore::Scheme,
+    scheme: &str,
     map: HashMap<String, String>,
 ) -> PyResult<ocore::blocking::Operator> {
     let op = ocore::Operator::via_iter(scheme, map).map_err(format_pyerr)?;
@@ -47,6 +43,10 @@ pub fn build_blocking_operator(
     let _guard = runtime.enter();
     let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
     Ok(op)
+}
+
+fn normalize_scheme(raw: &str) -> String {
+    raw.trim().to_ascii_lowercase().replace('_', "-")
 }
 
 /// The blocking equivalent of `AsyncOperator`.
@@ -60,7 +60,7 @@ pub fn build_blocking_operator(
 #[pyclass(module = "opendal.operator", subclass)]
 pub struct PyOperator {
     pub core: ocore::blocking::Operator,
-    pub __scheme: ocore::Scheme,
+    pub __scheme: String,
     pub __map: HashMap<String, String>,
 }
 
@@ -83,12 +83,7 @@ impl PyOperator {
     #[new]
     #[pyo3(signature = (scheme, *, **kwargs))]
     pub fn new(scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
-        let scheme = ocore::Scheme::from_str(scheme)
-            .map_err(|err| {
-                ocore::Error::new(ocore::ErrorKind::Unexpected, "unsupported scheme")
-                    .set_source(err)
-            })
-            .map_err(format_pyerr)?;
+        let scheme = normalize_scheme(&scheme);
         let map = kwargs
             .map(|v| {
                 v.extract::<HashMap<String, String>>()
@@ -97,7 +92,7 @@ impl PyOperator {
             .unwrap_or_default();
 
         Ok(PyOperator {
-            core: build_blocking_operator(scheme, map.clone())?,
+            core: build_blocking_operator(&scheme, map.clone())?,
             __scheme: scheme,
             __map: map,
         })
@@ -122,7 +117,7 @@ impl PyOperator {
         let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
         Ok(Self {
             core: op,
-            __scheme: self.__scheme,
+            __scheme: self.__scheme.clone(),
             __map: self.__map.clone(),
         })
     }
@@ -475,8 +470,19 @@ impl PyOperator {
     /// path : str
     ///     The path to remove.
     pub fn remove_all(&self, path: PathBuf) -> PyResult<()> {
+        // TODO: change signature for delete options
+
+        use ocore::options::DeleteOptions;
         let path = path.to_string_lossy().to_string();
-        self.core.remove_all(&path).map_err(format_pyerr)
+        self.core
+            .delete_options(
+                &path,
+                DeleteOptions {
+                    recursive: true,
+                    ..Default::default()
+                },
+            )
+            .map_err(format_pyerr)
     }
 
     /// Create a directory at the given path.
@@ -657,7 +663,7 @@ impl PyOperator {
     pub fn to_async_operator(&self) -> PyResult<PyAsyncOperator> {
         Ok(PyAsyncOperator {
             core: self.core.clone().into(),
-            __scheme: self.__scheme,
+            __scheme: self.__scheme.clone(),
             __map: self.__map.clone(),
         })
     }
@@ -678,7 +684,7 @@ impl PyOperator {
 
     #[gen_stub(skip)]
     fn __getnewargs_ex__(&self, py: Python) -> PyResult<Py<PyAny>> {
-        let args = vec![self.__scheme.to_string()];
+        let args = vec![self.__scheme.clone()];
         let args = PyTuple::new(py, args)?.into_py_any(py)?;
         let kwargs = self.__map.clone().into_py_any(py)?;
         PyTuple::new(py, [args, kwargs])?.into_py_any(py)
@@ -696,7 +702,7 @@ impl PyOperator {
 #[pyclass(module = "opendal.operator", subclass)]
 pub struct PyAsyncOperator {
     core: ocore::Operator,
-    __scheme: ocore::Scheme,
+    __scheme: String,
     __map: HashMap<String, String>,
 }
 
@@ -719,12 +725,7 @@ impl PyAsyncOperator {
     #[new]
     #[pyo3(signature = (scheme, * ,**kwargs))]
     pub fn new(scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
-        let scheme = ocore::Scheme::from_str(scheme)
-            .map_err(|err| {
-                ocore::Error::new(ocore::ErrorKind::Unexpected, "unsupported scheme")
-                    .set_source(err)
-            })
-            .map_err(format_pyerr)?;
+        let scheme = normalize_scheme(&scheme);
 
         let map = kwargs
             .map(|v| {
@@ -734,7 +735,7 @@ impl PyAsyncOperator {
             .unwrap_or_default();
 
         Ok(PyAsyncOperator {
-            core: build_operator(scheme, map.clone())?,
+            core: build_operator(&scheme, map.clone())?,
             __scheme: scheme,
             __map: map,
         })
@@ -755,7 +756,7 @@ impl PyAsyncOperator {
         let op = layer.0.layer(self.core.clone());
         Ok(Self {
             core: op,
-            __scheme: self.__scheme,
+            __scheme: self.__scheme.clone(),
             __map: self.__map.clone(),
         })
     }
@@ -1201,7 +1202,10 @@ impl PyAsyncOperator {
         let this = self.core.clone();
         let path = path.to_string_lossy().to_string();
         future_into_py(py, async move {
-            this.remove_all(&path).await.map_err(format_pyerr)
+            this.delete_with(&path)
+                .recursive(true)
+                .await
+                .map_err(format_pyerr)
         })
     }
 
@@ -1582,7 +1586,7 @@ impl PyAsyncOperator {
 
         Ok(PyOperator {
             core: op,
-            __scheme: self.__scheme,
+            __scheme: self.__scheme.clone(),
             __map: self.__map.clone(),
         })
     }
@@ -1607,7 +1611,7 @@ impl PyAsyncOperator {
 
     #[gen_stub(skip)]
     fn __getnewargs_ex__(&self, py: Python) -> PyResult<Py<PyAny>> {
-        let args = vec![self.__scheme.to_string()];
+        let args = vec![self.__scheme.clone()];
         let args = PyTuple::new(py, args)?.into_py_any(py)?;
         let kwargs = self.__map.clone().into_py_any(py)?;
         PyTuple::new(py, [args, kwargs])?.into_py_any(py)
