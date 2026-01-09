@@ -109,8 +109,9 @@ impl PyOperator {
     /// -------
     /// Operator
     ///     A new operator with the layer added.
-    pub fn layer(&self, layer: &layers::Layer) -> PyResult<Self> {
-        let op = layer.0.layer(self.core.clone().into());
+    pub fn layer(&self, layer: Bound<'_, layers::Layer>) -> PyResult<Self> {
+        let layer_ref = layer.borrow();
+        let op = layer_ref.0.layer(self.core.clone().into());
 
         let runtime = pyo3_async_runtimes::tokio::get_runtime();
         let _guard = runtime.enter();
@@ -752,8 +753,9 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     A new operator with the layer added.
-    pub fn layer(&self, layer: &layers::Layer) -> PyResult<Self> {
-        let op = layer.0.layer(self.core.clone());
+    pub fn layer(&self, layer: Bound<'_, layers::Layer>) -> PyResult<Self> {
+        let layer_ref = layer.borrow();
+        let op = layer_ref.0.layer(self.core.clone());
         Ok(Self {
             core: op,
             __scheme: self.__scheme.clone(),
