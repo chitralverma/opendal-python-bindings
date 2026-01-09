@@ -20,8 +20,8 @@
 use ::opendal_pyo3 as opyo3;
 use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
-mod s3;
-pub use s3::*;
+mod fs;
+pub use fs::*;
 
 use opyo3::default_registry;
 use std::sync::Once;
@@ -30,19 +30,25 @@ static INIT: Once = Once::new();
 
 pub fn init() {
     INIT.call_once(|| {
-        opendal_service_s3::register_s3_service(default_registry());
+        opendal_service_fs::register_fs_service(default_registry());
     });
 }
 
 #[pymodule(gil_used = false)]
-fn _s3_service(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _fs_service(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     init();
 
     // Operator module
-    opyo3::add_pymodule!(py, m, "opendal_s3_service", "operator", [S3PyOperator])?;
+    opyo3::add_pymodule!(
+        py,
+        m,
+        "opendal_fs_service",
+        "operator",
+        [FsPyOperator, FsPyAsyncOperator]
+    )?;
 
     Ok(())
 }

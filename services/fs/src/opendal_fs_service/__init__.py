@@ -15,30 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[package]
-name = "opendal_s3_service"
+# ruff: noqa: D104
 
-authors = { workspace = true }
-description = "Apache OpenDAL™ Python Binding (s3 service)"
-edition = { workspace = true }
-homepage = { workspace = true }
-keywords = []
-license = { workspace = true }
-readme = "README.md"
-repository = { workspace = true }
-rust-version = { workspace = true }
-version = { workspace = true }
+from opendal_fs_service._fs_service import __version__
+from opendal_fs_service.operator import (  # pyright:ignore
+    FsPyAsyncOperator,
+    FsPyOperator,
+)
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-name = "_s3_service"
-
-[[bin]]
-doc = false
-name = "stub_gen_s3"
-
-[dependencies]
-opendal-pyo3 = { path = "../../opendal-pyo3" }
-opendal-service-s3 = { git = "https://github.com/apache/opendal.git", branch = "main" }
-pyo3 = { workspace = true }
-pyo3-stub-gen = { workspace = true }
+__all__ = ["__version__", "FsPyOperator", "FsPyAsyncOperator"]

@@ -38,9 +38,6 @@ doc = false
 name = "stub_gen"
 
 [dependencies]
-opendal-pyo3 = { path = "../opendal-pyo3", features = [
-  "services-fs",
-  "services-memory",
-] }
+opendal-pyo3 = { path = "../opendal-pyo3" }
 pyo3 = { workspace = true }
 pyo3-stub-gen = { workspace = true }

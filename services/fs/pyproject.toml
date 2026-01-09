@@ -15,30 +15,40 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[package]
-name = "opendal_s3_service"
+[project]
+name = "opendal-fs-service"
 
-authors = { workspace = true }
-description = "Apache OpenDAL™ Python Binding (s3 service)"
-edition = { workspace = true }
-homepage = { workspace = true }
-keywords = []
-license = { workspace = true }
+dependencies = ["opendal"]
+dynamic = [
+  "version",
+  "description",
+  "keywords",
+  "license",
+  "summary",
+  "home_page",
+  "author",
+  "author_email",
+  "project_url",
+]
 readme = "README.md"
-repository = { workspace = true }
-rust-version = { workspace = true }
-version = { workspace = true }
+requires-python = ">=3.10"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
-name = "_s3_service"
+[tool.uv.sources]
+opendal = { workspace = true }
 
-[[bin]]
-doc = false
-name = "stub_gen_s3"
+[tool.maturin]
+module-name = "opendal_fs_service._fs_service"
+python-packages = ["opendal_fs_service"]
+python-source = "src"
 
-[dependencies]
-opendal-pyo3 = { path = "../../opendal-pyo3" }
-opendal-service-s3 = { git = "https://github.com/apache/opendal.git", branch = "main" }
-pyo3 = { workspace = true }
-pyo3-stub-gen = { workspace = true }
+[tool.uv]
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "src/**/*.rs" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+]
+
+[build-system]
+build-backend = "maturin"
+requires = ["maturin>=1.0,<2.0"]

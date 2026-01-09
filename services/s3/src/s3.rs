@@ -17,6 +17,7 @@
 
 use crate::opyo3;
 use opendal_pyo3::PyOperator;
+use opendal_service_s3::S3_SCHEME;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 // use crate::opyo3::PyAsyncOperator;
@@ -38,7 +39,7 @@ use std::collections::HashMap;
 #[derive(Clone)]
 pub struct S3PyOperator {
     core: opyo3::ocore::blocking::Operator,
-    __scheme: opyo3::ocore::Scheme,
+    __scheme: String,
     __map: HashMap<String, String>,
 }
 
@@ -60,7 +61,6 @@ impl S3PyOperator {
     #[new]
     #[pyo3(signature = (*, **kwargs))]
     pub fn new(kwargs: Option<&Bound<PyDict>>) -> PyResult<PyClassInitializer<Self>> {
-        let scheme = opyo3::ocore::Scheme::S3;
         let map = kwargs
             .map(|v| {
                 v.extract::<HashMap<String, String>>()
@@ -68,8 +68,8 @@ impl S3PyOperator {
             })
             .unwrap_or_default();
         let py_operator = Self {
-            core: opyo3::build_blocking_operator(scheme, map.clone())?,
-            __scheme: scheme,
+            core: opyo3::build_blocking_operator(S3_SCHEME, map.clone())?,
+            __scheme: S3_SCHEME.to_string(),
             __map: map,
         };
 
