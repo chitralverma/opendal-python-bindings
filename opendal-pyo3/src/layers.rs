@@ -51,14 +51,6 @@ impl PythonLayer for RetryLayer {
     }
 }
 
-impl RetryLayer {
-    /// Internal method to get the PythonLayer trait object
-    /// This is used by the operator.layer() method
-    pub fn as_python_layer(&self) -> &dyn PythonLayer {
-        self as &dyn PythonLayer
-    }
-}
-
 #[gen_stub_pymethods]
 #[pymethods]
 impl RetryLayer {
@@ -119,34 +111,6 @@ impl RetryLayer {
 
         Ok(class)
     }
-
-    /// Internal method to apply this layer to a blocking operator
-    /// This is called by Operator.layer()
-    fn _apply_layer_blocking(&self, op: PyRef<operator::PyOperator>) -> PyResult<operator::PyOperator> {
-        let new_op = self.layer(op.core.clone().into());
-        
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-        let _guard = runtime.enter();
-        let blocking_op = ocore::blocking::Operator::new(new_op).map_err(format_pyerr)?;
-        
-        Ok(operator::PyOperator {
-            core: blocking_op,
-            __scheme: op.__scheme.clone(),
-            __map: op.__map.clone(),
-        })
-    }
-
-    /// Internal method to apply this layer to an async operator
-    /// This is called by AsyncOperator.layer()
-    fn _apply_layer_async(&self, op: PyRef<operator::PyAsyncOperator>) -> PyResult<operator::PyAsyncOperator> {
-        let new_op = self.layer(op.core.clone());
-        
-        Ok(operator::PyAsyncOperator {
-            core: new_op,
-            __scheme: op.__scheme.clone(),
-            __map: op.__map.clone(),
-        })
-    }
 }
 
 /// A layer that limits the number of concurrent operations.
@@ -191,34 +155,6 @@ impl ConcurrentLimitLayer {
 
         Ok(class)
     }
-
-    /// Internal method to apply this layer to a blocking operator
-    /// This is called by Operator.layer()
-    fn _apply_layer_blocking(&self, op: PyRef<operator::PyOperator>) -> PyResult<operator::PyOperator> {
-        let new_op = self.layer(op.core.clone().into());
-        
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-        let _guard = runtime.enter();
-        let blocking_op = ocore::blocking::Operator::new(new_op).map_err(format_pyerr)?;
-        
-        Ok(operator::PyOperator {
-            core: blocking_op,
-            __scheme: op.__scheme.clone(),
-            __map: op.__map.clone(),
-        })
-    }
-
-    /// Internal method to apply this layer to an async operator
-    /// This is called by AsyncOperator.layer()
-    fn _apply_layer_async(&self, op: PyRef<operator::PyAsyncOperator>) -> PyResult<operator::PyAsyncOperator> {
-        let new_op = self.layer(op.core.clone());
-        
-        Ok(operator::PyAsyncOperator {
-            core: new_op,
-            __scheme: op.__scheme.clone(),
-            __map: op.__map.clone(),
-        })
-    }
 }
 
 /// A layer that guesses MIME types for objects based on their paths or content.
@@ -261,33 +197,5 @@ impl MimeGuessLayer {
         let class =
             PyClassInitializer::from(Layer(Box::new(mime_guess.clone()))).add_subclass(mime_guess);
         Ok(class)
-    }
-
-    /// Internal method to apply this layer to a blocking operator
-    /// This is called by Operator.layer()
-    fn _apply_layer_blocking(&self, op: PyRef<operator::PyOperator>) -> PyResult<operator::PyOperator> {
-        let new_op = self.layer(op.core.clone().into());
-        
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-        let _guard = runtime.enter();
-        let blocking_op = ocore::blocking::Operator::new(new_op).map_err(format_pyerr)?;
-        
-        Ok(operator::PyOperator {
-            core: blocking_op,
-            __scheme: op.__scheme.clone(),
-            __map: op.__map.clone(),
-        })
-    }
-
-    /// Internal method to apply this layer to an async operator
-    /// This is called by AsyncOperator.layer()
-    fn _apply_layer_async(&self, op: PyRef<operator::PyAsyncOperator>) -> PyResult<operator::PyAsyncOperator> {
-        let new_op = self.layer(op.core.clone());
-        
-        Ok(operator::PyAsyncOperator {
-            core: new_op,
-            __scheme: op.__scheme.clone(),
-            __map: op.__map.clone(),
-        })
     }
 }

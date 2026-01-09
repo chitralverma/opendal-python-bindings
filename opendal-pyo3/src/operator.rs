@@ -58,7 +58,6 @@ fn normalize_scheme(raw: &str) -> String {
 /// AsyncOperator
 #[gen_stub_pyclass]
 #[pyclass(module = "opendal.operator", subclass)]
-#[derive(Clone)]
 pub struct PyOperator {
     pub core: ocore::blocking::Operator,
     pub __scheme: String,
@@ -110,21 +109,17 @@ impl PyOperator {
     /// -------
     /// Operator
     ///     A new operator with the layer added.
-    pub fn layer(&self, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
-        // Call a method on the layer object that applies the layer
-        // We pass the raw operator data to avoid type mismatches across modules
-        let apply_method = layer.getattr("_apply_layer_blocking")?;
-        
-        // Pass the operator's components as a tuple
-        let args = (self.core.clone().into(), &self.__scheme, &self.__map);
-        let result = apply_method.call1((args,))?;
-        
-        // Result should be a tuple of (core_op, scheme, map)
-        let result_tuple: (&Bound<PyAny>, String, HashMap<String, String>) = result.extract()?;
-        
-        // Extract the core operator from result
-        // This is complex - let me try a different approach
-        todo!("Need to find a way to pass operators across module boundaries")
+    pub fn layer(&self, layer: &layers::Layer) -> PyResult<Self> {
+        let op = layer.0.layer(self.core.clone().into());
+
+        let runtime = pyo3_async_runtimes::tokio::get_runtime();
+        let _guard = runtime.enter();
+        let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
+        Ok(Self {
+            core: op,
+            __scheme: self.__scheme.clone(),
+            __map: self.__map.clone(),
+        })
     }
 
     /// Open a file-like object for the given path.
@@ -705,7 +700,6 @@ impl PyOperator {
 /// Operator
 #[gen_stub_pyclass]
 #[pyclass(module = "opendal.operator", subclass)]
-#[derive(Clone)]
 pub struct PyAsyncOperator {
     pub core: ocore::Operator,
     pub __scheme: String,
@@ -758,20 +752,12 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     A new operator with the layer added.
-    pub fn layer(&self, py: Python, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
-        // Call the _apply_layer_async method on the layer object
-        // This avoids the type mismatch issue across different extension modules
-        let apply_method = layer.getattr("_apply_layer_async")?;
-        // Create a Python wrapper for self using Py::new
-        let self_py = Py::new(py, self.clone())?;
-        let result = apply_method.call1((self_py,))?;
-        // result is a Python object wrapping PyAsyncOperator - extract it
-        let py_op_bound = result.downcast::<Self>()?;
-        let py_op = py_op_bound.borrow();
+    pub fn layer(&self, layer: &layers::Layer) -> PyResult<Self> {
+        let op = layer.0.layer(self.core.clone());
         Ok(Self {
-            core: py_op.core.clone(),
-            __scheme: py_op.__scheme.clone(),
-            __map: py_op.__map.clone(),
+            core: op,
+            __scheme: self.__scheme.clone(),
+            __map: self.__map.clone(),
         })
     }
 
