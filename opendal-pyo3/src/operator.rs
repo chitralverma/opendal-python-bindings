@@ -109,8 +109,66 @@ impl PyOperator {
     /// -------
     /// Operator
     ///     A new operator with the layer added.
-    pub fn layer(&self, layer: Bound<'_, layers::Layer>) -> PyResult<Self> {
-        let layer_ref = layer.borrow();
+    pub fn layer(&self, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
+        eprintln!("DEBUG: layer() called with type: {:?}", layer.get_type());
+        
+        // Try to extract from different layer types, accessing their base Layer
+        eprintln!("DEBUG: Trying to downcast to RetryLayer...");
+        if let Ok(retry) = layer.downcast::<layers::RetryLayer>() {
+            eprintln!("DEBUG: Successfully downcast to RetryLayer");
+            let retry_ref = retry.borrow();
+            let base_layer = retry_ref.as_super();
+            let op = base_layer.0.layer(self.core.clone().into());
+            
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            let _guard = runtime.enter();
+            let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
+            return Ok(Self {
+                core: op,
+                __scheme: self.__scheme.clone(),
+                __map: self.__map.clone(),
+            });
+        }
+        
+        eprintln!("DEBUG: Trying to downcast to ConcurrentLimitLayer...");
+        if let Ok(concurrent) = layer.downcast::<layers::ConcurrentLimitLayer>() {
+            eprintln!("DEBUG: Successfully downcast to ConcurrentLimitLayer");
+            let concurrent_ref = concurrent.borrow();
+            let base_layer = concurrent_ref.as_super();
+            let op = base_layer.0.layer(self.core.clone().into());
+            
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            let _guard = runtime.enter();
+            let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
+            return Ok(Self {
+                core: op,
+                __scheme: self.__scheme.clone(),
+                __map: self.__map.clone(),
+            });
+        }
+        
+        eprintln!("DEBUG: Trying to downcast to MimeGuessLayer...");
+        if let Ok(mime) = layer.downcast::<layers::MimeGuessLayer>() {
+            eprintln!("DEBUG: Successfully downcast to MimeGuessLayer");
+            let mime_ref = mime.borrow();
+            let base_layer = mime_ref.as_super();
+            let op = base_layer.0.layer(self.core.clone().into());
+            
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            let _guard = runtime.enter();
+            let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
+            return Ok(Self {
+                core: op,
+                __scheme: self.__scheme.clone(),
+                __map: self.__map.clone(),
+            });
+        }
+        
+        // Finally try direct Layer type
+        eprintln!("DEBUG: Trying to downcast to Layer...");
+        let layer_bound = layer.downcast::<layers::Layer>()?;
+        eprintln!("DEBUG: Successfully downcast to Layer");
+        let layer_ref = layer_bound.borrow();
         let op = layer_ref.0.layer(self.core.clone().into());
 
         let runtime = pyo3_async_runtimes::tokio::get_runtime();
@@ -753,8 +811,44 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     A new operator with the layer added.
-    pub fn layer(&self, layer: Bound<'_, layers::Layer>) -> PyResult<Self> {
-        let layer_ref = layer.borrow();
+    pub fn layer(&self, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
+        // Try to extract from different layer types, accessing their base Layer
+        if let Ok(retry) = layer.downcast::<layers::RetryLayer>() {
+            let retry_ref = retry.borrow();
+            let base_layer = retry_ref.as_super();
+            let op = base_layer.0.layer(self.core.clone());
+            return Ok(Self {
+                core: op,
+                __scheme: self.__scheme.clone(),
+                __map: self.__map.clone(),
+            });
+        }
+        
+        if let Ok(concurrent) = layer.downcast::<layers::ConcurrentLimitLayer>() {
+            let concurrent_ref = concurrent.borrow();
+            let base_layer = concurrent_ref.as_super();
+            let op = base_layer.0.layer(self.core.clone());
+            return Ok(Self {
+                core: op,
+                __scheme: self.__scheme.clone(),
+                __map: self.__map.clone(),
+            });
+        }
+        
+        if let Ok(mime) = layer.downcast::<layers::MimeGuessLayer>() {
+            let mime_ref = mime.borrow();
+            let base_layer = mime_ref.as_super();
+            let op = base_layer.0.layer(self.core.clone());
+            return Ok(Self {
+                core: op,
+                __scheme: self.__scheme.clone(),
+                __map: self.__map.clone(),
+            });
+        }
+        
+        // Finally try direct Layer type
+        let layer_bound = layer.downcast::<layers::Layer>()?;
+        let layer_ref = layer_bound.borrow();
         let op = layer_ref.0.layer(self.core.clone());
         Ok(Self {
             core: op,
