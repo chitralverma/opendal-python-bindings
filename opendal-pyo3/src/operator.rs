@@ -58,6 +58,7 @@ fn normalize_scheme(raw: &str) -> String {
 /// AsyncOperator
 #[gen_stub_pyclass]
 #[pyclass(module = "opendal.operator", subclass)]
+#[derive(Clone)]
 pub struct PyOperator {
     pub core: ocore::blocking::Operator,
     pub __scheme: String,
@@ -110,75 +111,20 @@ impl PyOperator {
     /// Operator
     ///     A new operator with the layer added.
     pub fn layer(&self, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
-        eprintln!("DEBUG: layer() called with type: {:?}", layer.get_type());
+        // Call a method on the layer object that applies the layer
+        // We pass the raw operator data to avoid type mismatches across modules
+        let apply_method = layer.getattr("_apply_layer_blocking")?;
         
-        // Try to extract from different layer types, accessing their base Layer
-        eprintln!("DEBUG: Trying to downcast to RetryLayer...");
-        if let Ok(retry) = layer.downcast::<layers::RetryLayer>() {
-            eprintln!("DEBUG: Successfully downcast to RetryLayer");
-            let retry_ref = retry.borrow();
-            let base_layer = retry_ref.as_super();
-            let op = base_layer.0.layer(self.core.clone().into());
-            
-            let runtime = pyo3_async_runtimes::tokio::get_runtime();
-            let _guard = runtime.enter();
-            let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
-            return Ok(Self {
-                core: op,
-                __scheme: self.__scheme.clone(),
-                __map: self.__map.clone(),
-            });
-        }
+        // Pass the operator's components as a tuple
+        let args = (self.core.clone().into(), &self.__scheme, &self.__map);
+        let result = apply_method.call1((args,))?;
         
-        eprintln!("DEBUG: Trying to downcast to ConcurrentLimitLayer...");
-        if let Ok(concurrent) = layer.downcast::<layers::ConcurrentLimitLayer>() {
-            eprintln!("DEBUG: Successfully downcast to ConcurrentLimitLayer");
-            let concurrent_ref = concurrent.borrow();
-            let base_layer = concurrent_ref.as_super();
-            let op = base_layer.0.layer(self.core.clone().into());
-            
-            let runtime = pyo3_async_runtimes::tokio::get_runtime();
-            let _guard = runtime.enter();
-            let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
-            return Ok(Self {
-                core: op,
-                __scheme: self.__scheme.clone(),
-                __map: self.__map.clone(),
-            });
-        }
+        // Result should be a tuple of (core_op, scheme, map)
+        let result_tuple: (&Bound<PyAny>, String, HashMap<String, String>) = result.extract()?;
         
-        eprintln!("DEBUG: Trying to downcast to MimeGuessLayer...");
-        if let Ok(mime) = layer.downcast::<layers::MimeGuessLayer>() {
-            eprintln!("DEBUG: Successfully downcast to MimeGuessLayer");
-            let mime_ref = mime.borrow();
-            let base_layer = mime_ref.as_super();
-            let op = base_layer.0.layer(self.core.clone().into());
-            
-            let runtime = pyo3_async_runtimes::tokio::get_runtime();
-            let _guard = runtime.enter();
-            let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
-            return Ok(Self {
-                core: op,
-                __scheme: self.__scheme.clone(),
-                __map: self.__map.clone(),
-            });
-        }
-        
-        // Finally try direct Layer type
-        eprintln!("DEBUG: Trying to downcast to Layer...");
-        let layer_bound = layer.downcast::<layers::Layer>()?;
-        eprintln!("DEBUG: Successfully downcast to Layer");
-        let layer_ref = layer_bound.borrow();
-        let op = layer_ref.0.layer(self.core.clone().into());
-
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-        let _guard = runtime.enter();
-        let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
-        Ok(Self {
-            core: op,
-            __scheme: self.__scheme.clone(),
-            __map: self.__map.clone(),
-        })
+        // Extract the core operator from result
+        // This is complex - let me try a different approach
+        todo!("Need to find a way to pass operators across module boundaries")
     }
 
     /// Open a file-like object for the given path.
@@ -759,6 +705,7 @@ impl PyOperator {
 /// Operator
 #[gen_stub_pyclass]
 #[pyclass(module = "opendal.operator", subclass)]
+#[derive(Clone)]
 pub struct PyAsyncOperator {
     pub core: ocore::Operator,
     pub __scheme: String,
@@ -811,49 +758,20 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     A new operator with the layer added.
-    pub fn layer(&self, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
-        // Try to extract from different layer types, accessing their base Layer
-        if let Ok(retry) = layer.downcast::<layers::RetryLayer>() {
-            let retry_ref = retry.borrow();
-            let base_layer = retry_ref.as_super();
-            let op = base_layer.0.layer(self.core.clone());
-            return Ok(Self {
-                core: op,
-                __scheme: self.__scheme.clone(),
-                __map: self.__map.clone(),
-            });
-        }
-        
-        if let Ok(concurrent) = layer.downcast::<layers::ConcurrentLimitLayer>() {
-            let concurrent_ref = concurrent.borrow();
-            let base_layer = concurrent_ref.as_super();
-            let op = base_layer.0.layer(self.core.clone());
-            return Ok(Self {
-                core: op,
-                __scheme: self.__scheme.clone(),
-                __map: self.__map.clone(),
-            });
-        }
-        
-        if let Ok(mime) = layer.downcast::<layers::MimeGuessLayer>() {
-            let mime_ref = mime.borrow();
-            let base_layer = mime_ref.as_super();
-            let op = base_layer.0.layer(self.core.clone());
-            return Ok(Self {
-                core: op,
-                __scheme: self.__scheme.clone(),
-                __map: self.__map.clone(),
-            });
-        }
-        
-        // Finally try direct Layer type
-        let layer_bound = layer.downcast::<layers::Layer>()?;
-        let layer_ref = layer_bound.borrow();
-        let op = layer_ref.0.layer(self.core.clone());
+    pub fn layer(&self, py: Python, layer: &Bound<'_, PyAny>) -> PyResult<Self> {
+        // Call the _apply_layer_async method on the layer object
+        // This avoids the type mismatch issue across different extension modules
+        let apply_method = layer.getattr("_apply_layer_async")?;
+        // Create a Python wrapper for self using Py::new
+        let self_py = Py::new(py, self.clone())?;
+        let result = apply_method.call1((self_py,))?;
+        // result is a Python object wrapping PyAsyncOperator - extract it
+        let py_op_bound = result.downcast::<Self>()?;
+        let py_op = py_op_bound.borrow();
         Ok(Self {
-            core: op,
-            __scheme: self.__scheme.clone(),
-            __map: self.__map.clone(),
+            core: py_op.core.clone(),
+            __scheme: py_op.__scheme.clone(),
+            __map: py_op.__map.clone(),
         })
     }
 
