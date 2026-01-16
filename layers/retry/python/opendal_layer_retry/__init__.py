@@ -15,33 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[project]
-name = "opendal-service-s3"
+# ruff: noqa: D104
 
-dependencies = ["opendal"]
-dynamic = [
-  "version",
-  "description",
-  "keywords",
-  "license",
-  "summary",
-  "home_page",
-  "author",
-  "author_email",
-  "project_url",
+from opendal_layer_retry._layer_retry import (
+    RetryLayer,
+    __version__,
+)
+
+__all__ = [
+    "__version__",
+    "RetryLayer",
 ]
-readme = "README.md"
-requires-python = ">=3.12"
-
-[tool.uv.sources]
-opendal = { workspace = true }
-
-[tool.maturin]
-features = ["pyo3/extension-module"]
-module-name = "opendal_service_s3._service_s3"
-python-source = "python"
-strip = true
-
-[build-system]
-build-backend = "maturin"
-requires = ["maturin>=1.9.4,<2.0"]

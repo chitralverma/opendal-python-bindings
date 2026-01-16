@@ -16,7 +16,7 @@
 # under the License.
 
 [package]
-name = "opendal_s3_service"
+name = "opendal-service-s3"
 
 authors = { workspace = true }
 description = "Apache OpenDAL™ Python Binding (s3 service)"
@@ -30,15 +30,15 @@ rust-version = { workspace = true }
 version = { workspace = true }
 
 [lib]
-crate-type = ["cdylib", "rlib"]
-name = "_s3_service"
+crate-type = ["cdylib"]
+name = "_service_s3"
 
 [[bin]]
 doc = false
 name = "stub_gen_s3"
 
 [dependencies]
-opendal-pyo3 = { path = "../../opendal-pyo3" }
 opendal-service-s3 = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { workspace = true }
+pyo3-opendal = { workspace = true }
 pyo3-stub-gen = { workspace = true }

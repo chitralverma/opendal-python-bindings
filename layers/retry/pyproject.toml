@@ -16,9 +16,9 @@
 # under the License.
 
 [project]
-name = "opendal"
+name = "opendal-layer-retry"
 
-dependencies = []
+dependencies = ["opendal"]
 dynamic = [
   "version",
   "description",
@@ -33,35 +33,12 @@ dynamic = [
 readme = "README.md"
 requires-python = ">=3.12"
 
-# [project.optional-dependencies]
-# # Services
-# service-fs = ["opendal-service-fs"]
-# service-s3 = ["opendal-service-s3"]
-
-# # Layers
-# layer-retry = ["opendal-layer-retry"]
-
-[dependency-groups]
-benchmark = [
-  "boto3>=1.37.9",
-  "boto3-stubs[essential]>=1.37.9",
-  "gevent>=24.11.1",
-  "greenify>=0.4.3",
-  "greenlet>=3.1.1",
-  "pydantic>=2.10.6",
-]
-
-# [tool.uv.sources]
-# # Services
-# opendal-service-fs = { workspace = true }
-# opendal-service-s3 = { workspace = true }
-
-# # Layers
-# opendal-layer-retry = { workspace = true }
+[tool.uv.sources]
+opendal = { workspace = true }
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-module-name = "opendal._core"
+module-name = "opendal_layer_retry._layer_retry"
 python-source = "python"
 strip = true
 

@@ -17,7 +17,7 @@
 
 [workspace]
 exclude = []
-members = ["opendal-pyo3", "opendal", "services/*"]
+members = ["pyo3-opendal", "opendal", "services/*", "layers/*"]
 resolver = "2"
 
 [workspace.package]
@@ -35,12 +35,14 @@ version = "0.47.0"
 
 [workspace.dependencies]
 bytes = "1.10.1"
-dict_derive = "0.6.0"                                                        # TODO: Remove this dependency if not needed
+dict_derive = "0.6.0"                                                             # TODO: Remove this dependency if not needed
 futures = "0.3"
 jiff = { version = "0.2.15" }
 mea = "0.6"
+opendal-core = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { version = "0.26.0", features = ["generate-import-lib", "jiff-02"] }
 pyo3-async-runtimes = { version = "0.26.0", features = ["tokio-runtime"] }
+pyo3-opendal = { path = "pyo3-opendal" }
 pyo3-stub-gen = { version = "0.17" }
 tokio = "1"
 

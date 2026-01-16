@@ -15,33 +15,30 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[project]
-name = "opendal-service-s3"
+[package]
+name = "opendal-layer-retry"
 
-dependencies = ["opendal"]
-dynamic = [
-  "version",
-  "description",
-  "keywords",
-  "license",
-  "summary",
-  "home_page",
-  "author",
-  "author_email",
-  "project_url",
-]
+authors = { workspace = true }
+description = "Apache OpenDAL™ Python Bindings (retry layer)"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = []
+license = { workspace = true }
 readme = "README.md"
-requires-python = ">=3.12"
+repository = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
 
-[tool.uv.sources]
-opendal = { workspace = true }
+[lib]
+crate-type = ["cdylib"]
+name = "_layer_retry"
 
-[tool.maturin]
-features = ["pyo3/extension-module"]
-module-name = "opendal_service_s3._service_s3"
-python-source = "python"
-strip = true
+[[bin]]
+doc = false
+name = "stub_gen_retry"
 
-[build-system]
-build-backend = "maturin"
-requires = ["maturin>=1.9.4,<2.0"]
+[dependencies]
+opendal-layer-retry = { git = "https://github.com/apache/opendal.git", branch = "main" }
+pyo3 = { workspace = true }
+pyo3-opendal = { workspace = true }
+pyo3-stub-gen = { workspace = true }

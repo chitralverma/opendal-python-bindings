@@ -15,18 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// expose the opendal-pyo3 as `opyo3`.
-// We will use `opyo3::Xxx` to represents all types from opendal-pyo3.
-use ::opendal_pyo3 as opyo3;
 use pyo3::prelude::*;
+use pyo3_opendal::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
 
 #[pymodule(gil_used = false)]
 fn _core(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    use opyo3::*;
+    check_debug_build!(py, "opendal")?;
 
     // Add version
-    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    add_version!(m)?;
 
     // Operator module
     add_pymodule!(py, m, "opendal", "operator", [PyOperator, PyAsyncOperator])?;
@@ -35,16 +33,10 @@ fn _core(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     add_pymodule!(py, m, "opendal", "file", [File, AsyncFile])?;
 
     // Capability module
-    add_pymodule!(py, m, "opendal", "capability", [Capability])?;
+    add_pymodule!(py, m, "opendal", "capability", [PyCapability])?;
 
     // Layers module
-    add_pymodule!(
-        py,
-        m,
-        "opendal",
-        "layers",
-        [Layer, RetryLayer, ConcurrentLimitLayer, MimeGuessLayer]
-    )?;
+    add_pymodule!(py, m, "opendal", "layers", [PyLayer])?;
 
     // Types module
     add_pymodule!(

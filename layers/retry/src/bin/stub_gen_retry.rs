@@ -19,7 +19,7 @@ use pyo3_stub_gen::Result;
 
 fn main() -> Result<()> {
     // `stub_info` is a function defined by `define_stub_info_gatherer!` macro.
-    let stub = _service_fs::stub_info()?;
+    let stub = _layer_retry::stub_info()?;
     stub.generate()?;
     Ok(())
 }

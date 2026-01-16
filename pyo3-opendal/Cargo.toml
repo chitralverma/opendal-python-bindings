@@ -15,33 +15,33 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[project]
-name = "opendal-service-s3"
+[package]
+name = "pyo3-opendal"
+publish = false
 
-dependencies = ["opendal"]
-dynamic = [
-  "version",
-  "description",
-  "keywords",
-  "license",
-  "summary",
-  "home_page",
-  "author",
-  "author_email",
-  "project_url",
-]
+authors = { workspace = true }
+categories = { workspace = true }
+description = "Apache OpenDAL™ Python Binding (pyo3)"
+edition = { workspace = true }
+homepage = { workspace = true }
+keywords = { workspace = true }
+license = { workspace = true }
 readme = "README.md"
-requires-python = ">=3.12"
+repository = { workspace = true }
+rust-version = { workspace = true }
+version = { workspace = true }
 
-[tool.uv.sources]
-opendal = { workspace = true }
+[lib]
+crate-type = ["rlib"]
 
-[tool.maturin]
-features = ["pyo3/extension-module"]
-module-name = "opendal_service_s3._service_s3"
-python-source = "python"
-strip = true
-
-[build-system]
-build-backend = "maturin"
-requires = ["maturin>=1.9.4,<2.0"]
+[dependencies]
+bytes = { workspace = true }
+dict_derive = { workspace = true }
+futures = { workspace = true }
+jiff = { workspace = true }
+mea = { workspace = true }
+opendal-core = { workspace = true, features = ["blocking"] }
+pyo3 = { workspace = true }
+pyo3-async-runtimes = { workspace = true }
+pyo3-stub-gen = { workspace = true }
+tokio = { workspace = true }

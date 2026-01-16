@@ -34,7 +34,7 @@ workspace_root := `uv workspace dir`
 [group('maintenance')]
 setup:
     @echo "{{ BOLD }}--- Installing/ validating dependencies ---{{ NORMAL }}"
-    @uv sync --managed-python --all-packages --all-groups --all-extras --compile-bytecode
+    @uv sync --managed-python --all-packages --all-groups --all-extras --compile-bytecode --no-install-workspace
 
 # Clean up all caches, build artifacts, and the venv
 [group('maintenance')]
@@ -43,7 +43,7 @@ clean:
     @cargo clean --quiet
     @echo "{{ BOLD }}--- Removing build directories, other caches, python bytecode and compiled extensions ---{{ NORMAL }}"
     @find {{ workspace_root }} \
-        \( -type d \( -name __pycache__ -o -name .venv -o -name .build -o -name .pytest_cache -o -name .mypy_cache -o -name .hypothesis -o -name .ruff_cache \) -prune -exec rm -rf {} + \) \
+        \( -type d \( -name __pycache__ -o -name .venv -o -name .build -o -name dist -o -name .pytest_cache -o -name .mypy_cache -o -name .hypothesis -o -name .ruff_cache \) -prune -exec rm -rf {} + \) \
         -o \
         \( -type f \( -name '*.py[co]' -o -name '_*.so' \) -delete \)
 
@@ -57,7 +57,7 @@ stub-gen: setup
     @echo "{{ BOLD }}--- Generating Python type stubs ---{{ NORMAL }}"
     # TODO: generate in services
     # @cargo run --quiet --manifest-path=../../dev/Cargo.toml -- generate -l python
-    @cargo run --quiet --package opendal-python-core --bin stub_gen
+    @cargo run --quiet --package opendal-python --bin stub_gen
     @echo "{{ BOLD }}--- Formatting and fixing generated stubs ---{{ NORMAL }}"
     -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
     @just fmt

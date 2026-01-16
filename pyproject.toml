@@ -17,11 +17,21 @@
 
 [project]
 dependencies = []
-description = "Add your description here"
+description = "Apache OpenDAL™ Python Binding (workspace)"
 name = "opendal-python-bindings"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 version = "0.1.0"
 
 [tool.uv.workspace]
-members = ["opendal", "services/*"]
+members = ["opendal", "services/*", "layers/*"]
+
+[dependency-groups]
+dev = ["maturin>=1.9.4,<2.0", "ruff>=0.9.10"]
+docs = ["mkdocs", "mkdocs-material", "mkdocstrings[python]", "mkdocs-jupyter"]
+test = [
+  "pytest>=8.3.5",
+  "pytest-asyncio>=0.25.3",
+  "python-dotenv>=1.0.1",
+  "pydantic-settings>=2.8.1",
+]

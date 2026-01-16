@@ -15,11 +15,31 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use pyo3_stub_gen::Result;
+// expose the opendal rust core as `core`.
+// We will use `ocore::Xxx` to represents all types from opendal rust core.
+pub use ::opendal_core as ocore;
+use pyo3::prelude::*;
 
-fn main() -> Result<()> {
-    // `stub_info` is a function defined by `define_stub_info_gatherer!` macro.
-    let stub = _service_fs::stub_info()?;
-    stub.generate()?;
-    Ok(())
+mod capability;
+pub use capability::*;
+mod layers;
+pub use layers::*;
+mod lister;
+pub use lister::*;
+mod metadata;
+pub use metadata::*;
+mod operator;
+pub use operator::*;
+mod file;
+pub use file::*;
+mod utils;
+pub use utils::*;
+mod errors;
+pub use errors::*;
+mod options;
+pub use options::*;
+use pyo3_stub_gen::derive::*;
+
+pub fn default_registry() -> &'static ocore::OperatorRegistry {
+    &*ocore::DEFAULT_OPERATOR_REGISTRY
 }

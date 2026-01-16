@@ -23,29 +23,21 @@ use pyo3_stub_gen::define_stub_info_gatherer;
 mod factory;
 pub use factory::*;
 
-use opyo3::default_registry;
-use std::sync::Once;
-
-static INIT: Once = Once::new();
-
-pub fn init() {
-    INIT.call_once(|| {
-        opendal_service_s3::register_s3_service(default_registry());
-    });
-}
-
 #[pymodule(gil_used = false)]
-fn _service_s3(py: Python, m: &Bound<PyModule>) -> PyResult<()> {
+fn _layer_retry(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     opyo3::check_debug_build!(py, env!("CARGO_PKG_NAME"))?;
 
     // Add version
     opyo3::add_version!(m)?;
 
-    init();
-
     // Export factory functions instead of operator classes
-    m.add_function(wrap_pyfunction!(create_s3_operator, m)?)?;
-    m.add_function(wrap_pyfunction!(create_s3_async_operator, m)?)?;
+    // m.add_function(wrap_pyfunction!(create_fs_operator, m)?)?;
+    // m.add_function(wrap_pyfunction!(create_fs_async_operator, m)?)?;
+    m.add_class::<factory::PyRetryLayer>()?;
+
+    // Type aliases for backward compatibility
+    m.add("PyOperator", py.get_type::<opyo3::PyOperator>())?;
+    m.add("PyAsyncOperator", py.get_type::<opyo3::PyAsyncOperator>())?;
 
     Ok(())
 }
