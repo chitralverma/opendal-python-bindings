@@ -29,7 +29,6 @@ import opendal.file
 import opendal.types
 from opendal.capability import Capability
 from opendal.file import File
-from opendal.layers import Layer
 from opendal.types import Metadata
 
 class PyAsyncOperator:
@@ -58,20 +57,6 @@ class PyAsyncOperator:
         -------
         AsyncOperator
             The new async operator.
-        """
-    def layer(self, layer: Layer) -> PyAsyncOperator:
-        r"""
-        Add a new layer to the operator.
-
-        Parameters
-        ----------
-        layer : Layer
-            The layer to add.
-
-        Returns
-        -------
-        AsyncOperator
-            A new operator with the layer added.
         """
     def open(
         self,
@@ -542,20 +527,6 @@ class PyOperator:
         -------
         Operator
             The new operator.
-        """
-    def layer(self, layer: Layer) -> PyOperator:
-        r"""
-        Add a new layer to this operator.
-
-        Parameters
-        ----------
-        layer : Layer
-            The layer to add.
-
-        Returns
-        -------
-        Operator
-            A new operator with the layer added.
         """
     def open(
         self,

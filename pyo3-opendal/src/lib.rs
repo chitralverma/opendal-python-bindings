@@ -38,8 +38,10 @@ mod errors;
 pub use errors::*;
 mod options;
 pub use options::*;
+pub mod export;
+pub mod ffi;
 use pyo3_stub_gen::derive::*;
 
 pub fn default_registry() -> &'static ocore::OperatorRegistry {
-    &*ocore::DEFAULT_OPERATOR_REGISTRY
+    &ocore::DEFAULT_OPERATOR_REGISTRY
 }

@@ -20,7 +20,7 @@
 //! This module provides factory functions that create core operator types
 //! configured for FS service, ensuring type compatibility with layers.
 
-use crate::opyo3;
+use crate::opyo3::{self, ocore};
 use opendal_layer_retry;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
@@ -99,6 +99,15 @@ impl opyo3::PythonLayer for PyRetryLayer {
     fn layer(&self, op: opyo3::ocore::Operator) -> opyo3::ocore::Operator {
         op.layer(self.l.clone())
     }
+
+    fn layer_blocking(
+        &self,
+        op: opyo3::ocore::blocking::Operator,
+    ) -> opyo3::ocore::blocking::Operator {
+        let o: ocore::Operator = op.clone().into();
+
+        opyo3::ocore::blocking::Operator::new(o.layer(self.l.clone())).expect("msg")
+    }
 }
 
 #[gen_stub_pymethods]
@@ -156,8 +165,7 @@ impl PyRetryLayer {
         }
 
         let retry_layer = Self { l: retry };
-        let class = PyClassInitializer::from(opyo3::PyLayer(Box::new(retry_layer.clone())))
-            .add_subclass(retry_layer);
+        let class = PyClassInitializer::from(opyo3::PyLayer::new()?).add_subclass(retry_layer);
 
         Ok(class)
     }

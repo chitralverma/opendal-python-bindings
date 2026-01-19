@@ -46,21 +46,21 @@ def test_original_issue() -> bool | None:
 
         # Create operator using factory function
         fs_async_op = create_fs_async_operator(root="/tmp/test_fs")
-        base = type(fs_async_op).__bases__[0]
 
-        print(f"Created FS async operator: {type(fs_async_op)}")
-        print(f"Base type: {base}")
+        # In the new architecture, fs_async_op is DIRECTLY an instance of PyAsyncOperator
+        op_type = type(fs_async_op)
+
+        print(f"Created FS async operator: {op_type}")
         print(f"OpBase type: {OpBase}")
 
-        # This should now be TRUE (was False before)
-        test1 = base is OpBase
-        test2 = id(base) == id(OpBase)
+        # This should now be TRUE
+        test1 = op_type is OpBase
 
         print("\n1. Type identity test:")
-        print(f"   base is OpBase: {test1}")
-        print(f"   id(base) == id(OpBase): {test2}")
+        print(f"   type(op) is OpBase: {test1}")
+        # print(f"   id(base) == id(OpBase): {test2}")
 
-        if test1 and test2:
+        if test1:
             print("   ✓ TYPE IDENTITY ISSUE SOLVED!")
         else:
             print("   ✗ Type identity issue still exists")
@@ -68,7 +68,9 @@ def test_original_issue() -> bool | None:
 
         # Test layer application
         print("\n2. Layer compatibility test:")
-        retry_layer = opendal.layers.RetryLayer()
+        from opendal_layer_retry import RetryLayer
+
+        retry_layer = RetryLayer()
 
         try:
             layered_op = fs_async_op.layer(retry_layer)

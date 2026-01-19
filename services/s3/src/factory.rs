@@ -24,48 +24,37 @@ use crate::opyo3;
 use opendal_service_s3::S3_SCHEME;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use pyo3_opendal::{PyAsyncOperator, PyOperator};
-use pyo3_stub_gen::derive::*;
+use pyo3_opendal::export::{OpendalAsyncOperator, OpendalOperator};
 use std::collections::HashMap;
 
 /// Factory function to create a new S3 blocking operator
-#[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<PyOperator> {
+pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
     let mut map = HashMap::new();
     if let Some(kwargs) = kwargs {
         map = kwargs.extract::<HashMap<String, String>>()?;
     }
 
     // Build S3 blocking operator
-    let core = opyo3::build_blocking_operator(&S3_SCHEME, map.clone())?;
+    let core = opyo3::build_blocking_operator(S3_SCHEME, map.clone())?;
 
-    Ok(PyOperator {
-        core,
-        __scheme: S3_SCHEME.to_string(),
-        __map: map,
-    })
+    Ok(OpendalOperator::new(core))
 }
 
 /// Factory function to create a new S3 async operator
-#[gen_stub_pyfunction]
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<PyAsyncOperator> {
+pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalAsyncOperator> {
     let mut map = HashMap::new();
     if let Some(kwargs) = kwargs {
         map = kwargs.extract::<HashMap<String, String>>()?;
     }
 
     // Build S3 async operator
-    let core = opyo3::build_operator(&S3_SCHEME, map.clone())?;
+    let core = opyo3::build_operator(S3_SCHEME, map.clone())?;
 
-    Ok(PyAsyncOperator {
-        core,
-        __scheme: S3_SCHEME.to_string(),
-        __map: map,
-    })
+    Ok(OpendalAsyncOperator::new(core))
 }
 
 /// S3-specific helper functions

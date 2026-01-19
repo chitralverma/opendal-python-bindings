@@ -28,8 +28,6 @@ sys.path.insert(0, "/Users/chitralverma/IdeaProjects/opendal-python-bindings")
 
 import opendal_service_fs
 
-import opendal
-
 
 def test_layer_application() -> bool | None:
     """Test layer application directly."""
@@ -41,8 +39,10 @@ def test_layer_application() -> bool | None:
         fs_operator = opendal_service_fs.create_fs_async_operator(root="/tmp/test_fs")
         print(f"FS operator: {type(fs_operator)}")
 
-        # Create a layer
-        retry_layer = opendal.layers.RetryLayer()
+        # Create a RetryLayer
+        from opendal_layer_retry import RetryLayer
+
+        retry_layer = RetryLayer()
         print(f"Retry layer: {type(retry_layer)}")
 
         # Test layer application
