@@ -137,8 +137,6 @@ impl PyOperator {
         }
     }
 
-    // ... rest of file
-
     /// Open a file-like object for the given path.
     ///
     /// The returning file-like object is a context manager.
