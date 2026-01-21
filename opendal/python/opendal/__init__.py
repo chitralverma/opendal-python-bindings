@@ -25,7 +25,7 @@ from opendal._core import (
     layers,
     types,
 )
-from opendal.operators import AsyncOperator, Operator  # pyright:ignore
+from opendal.operator import AsyncOperator, Operator  # pyright:ignore
 
 __all__ = [
     "capability",

@@ -40,7 +40,7 @@ pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
     let runtime = pyo3_async_runtimes::tokio::get_runtime();
     let handle = runtime.handle().clone();
 
-    let op = Operator::via_iter(S3_SCHEME, map)
+    let op = Operator::via_iter(S3_SCHEME, map.clone())
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
         .layer(PyRuntimeLayer::new(handle));
 
@@ -49,7 +49,7 @@ pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
         pyo3::exceptions::PyValueError::new_err(format!("blocking build error: {err}"))
     })?;
 
-    Ok(OpendalOperator::new(op))
+    Ok(OpendalOperator::new(op, map))
 }
 
 /// Factory function to create a new S3 async operator
@@ -64,11 +64,11 @@ pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<Open
     let runtime = pyo3_async_runtimes::tokio::get_runtime();
     let handle = runtime.handle().clone();
 
-    let op = Operator::via_iter(S3_SCHEME, map)
+    let op = Operator::via_iter(S3_SCHEME, map.clone())
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
         .layer(PyRuntimeLayer::new(handle));
 
-    Ok(OpendalAsyncOperator::new(op))
+    Ok(OpendalAsyncOperator::new(op, map))
 }
 
 /// S3-specific helper functions

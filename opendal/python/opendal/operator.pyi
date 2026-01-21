@@ -31,7 +31,8 @@ from opendal.capability import Capability
 from opendal.file import File
 from opendal.types import Metadata
 
-class PyAsyncOperator:
+@typing.final
+class AsyncOperator:
     r"""
     The async equivalent of `Operator`.
 
@@ -42,7 +43,7 @@ class PyAsyncOperator:
     Operator
     """
 
-    def __new__(cls, scheme: builtins.str, **kwargs: typing.Any) -> typing.Self:
+    def __new__(cls, scheme: builtins.str, **kwargs: typing.Any) -> AsyncOperator:
         r"""
         Create a new `AsyncOperator`.
 
@@ -57,6 +58,20 @@ class PyAsyncOperator:
         -------
         AsyncOperator
             The new async operator.
+        """
+    def layer(self, layer: typing.Any) -> AsyncOperator:
+        r"""
+        Add a new layer to the operator.
+
+        Parameters
+        ----------
+        layer : Layer
+            The layer to add.
+
+        Returns
+        -------
+        AsyncOperator
+            A new operator with the layer added.
         """
     def open(
         self,
@@ -491,7 +506,7 @@ class PyAsyncOperator:
         Capability
             The capability of the operator.
         """
-    def to_operator(self) -> PyOperator:
+    def to_operator(self) -> Operator:
         r"""
         Create a new blocking `Operator` from this async operator.
 
@@ -501,7 +516,8 @@ class PyAsyncOperator:
             The blocking operator.
         """
 
-class PyOperator:
+@typing.final
+class Operator:
     r"""
     The blocking equivalent of `AsyncOperator`.
 
@@ -512,21 +528,19 @@ class PyOperator:
     AsyncOperator
     """
 
-    def __new__(cls, scheme: builtins.str, **kwargs: typing.Any) -> typing.Self:
+    def layer(self, layer: typing.Any) -> Operator:
         r"""
-        Create a new blocking `Operator`.
+        Add a new layer to this operator.
 
         Parameters
         ----------
-        scheme : str
-            The scheme of the service.
-        **kwargs : dict
-            The options for the service.
+        layer : Layer
+            The layer to add.
 
         Returns
         -------
         Operator
-            The new operator.
+            A new operator with the layer added.
         """
     def open(
         self,
@@ -872,7 +886,7 @@ class PyOperator:
         Exception
             If the operator is not able to work correctly.
         """
-    def to_async_operator(self) -> PyAsyncOperator:
+    def to_async_operator(self) -> AsyncOperator:
         r"""
         Create a new `AsyncOperator` from this blocking operator.
 

@@ -55,11 +55,11 @@ fn normalize_scheme(raw: &str) -> String {
 /// --------
 /// AsyncOperator
 #[gen_stub_pyclass]
-#[pyclass(module = "opendal.operator", subclass)]
+#[pyclass(module = "opendal.operator", name = "Operator")]
 pub struct PyOperator {
-    pub core: ocore::blocking::Operator,
-    pub __scheme: String,
-    pub __map: HashMap<String, String>,
+    core: ocore::blocking::Operator,
+    __scheme: String,
+    __map: HashMap<String, String>,
 }
 
 #[gen_stub_pymethods]
@@ -78,9 +78,10 @@ impl PyOperator {
     /// -------
     /// Operator
     ///     The new operator.
+    #[gen_stub(skip)]
     #[new]
     #[pyo3(signature = (scheme, *, **kwargs))]
-    pub fn new(scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
+    pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
         let scheme = normalize_scheme(scheme);
         let map = kwargs
             .map(|v| {
@@ -88,6 +89,33 @@ impl PyOperator {
                     .expect("must be valid hashmap")
             })
             .unwrap_or_default();
+
+        // Try to dispatch to service extension
+        let module_name = format!("opendal_service_{}", scheme.replace('-', "_"));
+        if let Ok(module) = py.import(module_name.as_str()) {
+            let func_name = format!("create_{}_operator", scheme.replace('-', "_"));
+            if let Ok(func) = module.getattr(func_name.as_str()) {
+                // We must use the kwargs passed to us.
+                // call(args, kwargs)
+                let args = PyTuple::empty(py);
+                match func.call(args, kwargs) {
+                    Ok(res) => {
+                        let wrapper: PyRef<PyOperator> = res.extract()?;
+                        return Ok(PyOperator {
+                            core: wrapper.core.clone(),
+                            __scheme: wrapper.__scheme.clone(),
+                            __map: wrapper.__map.clone(),
+                        });
+                    }
+                    Err(e) => {
+                        // If dispatch failed, maybe print why?
+                        // or just propagate it if we are sure it's the right service.
+                        // But if scheme is "fs", and "opendal_service_fs" exists, then failure is bad.
+                        return Err(e);
+                    }
+                }
+            }
+        }
 
         Ok(PyOperator {
             core: build_blocking_operator(&scheme, map.clone())?,
@@ -99,13 +127,16 @@ impl PyOperator {
     /// Create a new operator from a PyCapsule.
     #[gen_stub(skip)]
     #[staticmethod]
-    pub fn _from_capsule(capsule: &Bound<PyCapsule>) -> PyResult<Self> {
+    pub fn _from_capsule(
+        capsule: &Bound<PyCapsule>,
+        map: HashMap<String, String>,
+    ) -> PyResult<Self> {
         let core = crate::ffi::from_operator_capsule(capsule)?;
         let __scheme = core.info().scheme().to_string();
         Ok(PyOperator {
             core,
             __scheme,
-            __map: HashMap::new(),
+            __map: map,
         })
     }
 
@@ -120,7 +151,6 @@ impl PyOperator {
     /// -------
     /// Operator
     ///     A new operator with the layer added.
-    #[gen_stub(skip)]
     pub fn layer(&self, py: Python, layer: &Bound<PyAny>) -> PyResult<Self> {
         if let Ok(layer) = layer.extract::<Py<layers::PyLayer>>() {
             let op = self.core.clone();
@@ -134,7 +164,7 @@ impl PyOperator {
             let capsule = crate::ffi::to_operator_capsule(py, self.core.clone())?;
             let new_capsule = layer.call_method1("_layer_apply_blocking", (capsule,))?;
             let new_capsule = new_capsule.downcast::<PyCapsule>()?;
-            Self::_from_capsule(new_capsule)
+            Self::_from_capsule(new_capsule, self.__map.clone())
         }
     }
 
@@ -715,11 +745,11 @@ impl PyOperator {
 /// --------
 /// Operator
 #[gen_stub_pyclass]
-#[pyclass(module = "opendal.operator", subclass)]
+#[pyclass(module = "opendal.operator", name = "AsyncOperator")]
 pub struct PyAsyncOperator {
-    pub core: ocore::Operator,
-    pub __scheme: String,
-    pub __map: HashMap<String, String>,
+    core: ocore::Operator,
+    __scheme: String,
+    __map: HashMap<String, String>,
 }
 
 #[gen_stub_pymethods]
@@ -740,7 +770,7 @@ impl PyAsyncOperator {
     ///     The new async operator.
     #[new]
     #[pyo3(signature = (scheme, * ,**kwargs))]
-    pub fn new(scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
+    pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
         let scheme = normalize_scheme(scheme);
 
         let map = kwargs
@@ -749,6 +779,26 @@ impl PyAsyncOperator {
                     .expect("must be valid hashmap")
             })
             .unwrap_or_default();
+
+        // Try to dispatch to service extension
+        let module_name = format!("opendal_service_{}", scheme.replace('-', "_"));
+        if let Ok(module) = py.import(module_name.as_str()) {
+            let func_name = format!("create_{}_async_operator", scheme.replace('-', "_"));
+            if let Ok(func) = module.getattr(func_name.as_str()) {
+                let args = PyTuple::empty(py);
+                match func.call(args, kwargs) {
+                    Ok(res) => {
+                        let wrapper: PyRef<PyAsyncOperator> = res.extract()?;
+                        return Ok(PyAsyncOperator {
+                            core: wrapper.core.clone(),
+                            __scheme: wrapper.__scheme.clone(),
+                            __map: wrapper.__map.clone(),
+                        });
+                    }
+                    Err(e) => return Err(e),
+                }
+            }
+        }
 
         Ok(PyAsyncOperator {
             core: build_operator(&scheme, map.clone())?,
@@ -760,13 +810,16 @@ impl PyAsyncOperator {
     /// Create a new async operator from a PyCapsule.
     #[gen_stub(skip)]
     #[staticmethod]
-    pub fn _from_capsule(capsule: &Bound<PyCapsule>) -> PyResult<Self> {
+    pub fn _from_capsule(
+        capsule: &Bound<PyCapsule>,
+        map: HashMap<String, String>,
+    ) -> PyResult<Self> {
         let core = crate::ffi::from_async_operator_capsule(capsule)?;
         let __scheme = core.info().scheme().to_string();
         Ok(PyAsyncOperator {
             core,
             __scheme,
-            __map: HashMap::new(),
+            __map: map,
         })
     }
 
@@ -781,7 +834,6 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     A new operator with the layer added.
-    #[gen_stub(skip)]
     pub fn layer<'p>(&self, py: Python<'p>, layer: &Bound<'p, PyAny>) -> PyResult<Self> {
         if let Ok(layer) = layer.extract::<Py<layers::PyLayer>>() {
             let op = self.core.clone();
@@ -795,7 +847,7 @@ impl PyAsyncOperator {
             let capsule = crate::ffi::to_async_operator_capsule(py, self.core.clone())?;
             let new_capsule = layer.call_method1("_layer_apply", (capsule,))?;
             let new_capsule = new_capsule.downcast::<PyCapsule>()?;
-            Self::_from_capsule(new_capsule)
+            Self::_from_capsule(new_capsule, self.__map.clone())
         }
     }
 
