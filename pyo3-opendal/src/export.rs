@@ -40,7 +40,7 @@ impl<'py> IntoPyObject<'py> for OpendalOperator {
         let capsule = to_operator_capsule(py, self.0)?;
         opendal_mod
             .getattr(intern!(py, "Operator"))?
-            .call_method1(intern!(py, "from_capsule"), (capsule,))
+            .call_method1(intern!(py, "_from_capsule"), (capsule,))
     }
 }
 
@@ -64,6 +64,6 @@ impl<'py> IntoPyObject<'py> for OpendalAsyncOperator {
         let capsule = to_async_operator_capsule(py, self.0)?;
         opendal_mod
             .getattr(intern!(py, "AsyncOperator"))?
-            .call_method1(intern!(py, "from_capsule"), (capsule,))
+            .call_method1(intern!(py, "_from_capsule"), (capsule,))
     }
 }

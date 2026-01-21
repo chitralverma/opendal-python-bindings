@@ -99,11 +99,12 @@ impl PyOperator {
     /// Create a new operator from a PyCapsule.
     #[gen_stub(skip)]
     #[staticmethod]
-    pub fn from_capsule(capsule: &Bound<PyCapsule>) -> PyResult<Self> {
+    pub fn _from_capsule(capsule: &Bound<PyCapsule>) -> PyResult<Self> {
         let core = crate::ffi::from_operator_capsule(capsule)?;
+        let __scheme = core.info().scheme().to_string();
         Ok(PyOperator {
             core,
-            __scheme: "unknown".to_string(),
+            __scheme,
             __map: HashMap::new(),
         })
     }
@@ -133,7 +134,7 @@ impl PyOperator {
             let capsule = crate::ffi::to_operator_capsule(py, self.core.clone())?;
             let new_capsule = layer.call_method1("_layer_apply_blocking", (capsule,))?;
             let new_capsule = new_capsule.downcast::<PyCapsule>()?;
-            Self::from_capsule(new_capsule)
+            Self::_from_capsule(new_capsule)
         }
     }
 
@@ -759,11 +760,12 @@ impl PyAsyncOperator {
     /// Create a new async operator from a PyCapsule.
     #[gen_stub(skip)]
     #[staticmethod]
-    pub fn from_capsule(capsule: &Bound<PyCapsule>) -> PyResult<Self> {
+    pub fn _from_capsule(capsule: &Bound<PyCapsule>) -> PyResult<Self> {
         let core = crate::ffi::from_async_operator_capsule(capsule)?;
+        let __scheme = core.info().scheme().to_string();
         Ok(PyAsyncOperator {
             core,
-            __scheme: "unknown".to_string(),
+            __scheme,
             __map: HashMap::new(),
         })
     }
@@ -793,7 +795,7 @@ impl PyAsyncOperator {
             let capsule = crate::ffi::to_async_operator_capsule(py, self.core.clone())?;
             let new_capsule = layer.call_method1("_layer_apply", (capsule,))?;
             let new_capsule = new_capsule.downcast::<PyCapsule>()?;
-            Self::from_capsule(new_capsule)
+            Self::_from_capsule(new_capsule)
         }
     }
 
