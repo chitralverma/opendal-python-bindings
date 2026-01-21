@@ -22,7 +22,7 @@ use pyo3::prelude::*;
 
 mod capability;
 pub use capability::*;
-mod layers;
+pub mod layers;
 pub use layers::*;
 mod lister;
 pub use lister::*;

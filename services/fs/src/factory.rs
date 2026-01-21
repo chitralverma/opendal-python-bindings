@@ -20,11 +20,12 @@
 //! This module provides factory functions that create core operator types
 //! configured for FS service, ensuring type compatibility with layers.
 
-use crate::opyo3::{build_blocking_operator, build_operator};
 use opendal_service_fs::FS_SCHEME;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3_opendal::export::{OpendalAsyncOperator, OpendalOperator};
+use pyo3_opendal::layers::RuntimeLayer;
+use pyo3_opendal::ocore::Operator;
 use std::collections::HashMap;
 
 /// Factory function to create a new FS blocking operator
@@ -36,10 +37,19 @@ pub fn create_fs_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
         map = kwargs.extract::<HashMap<String, String>>()?;
     }
 
-    // Build the FS blocking operator
-    let core = build_blocking_operator(FS_SCHEME, map.clone())?;
+    let runtime = pyo3_async_runtimes::tokio::get_runtime();
+    let handle = runtime.handle().clone();
 
-    Ok(OpendalOperator::new(core))
+    let op = Operator::via_iter(FS_SCHEME, map)
+        .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
+        .layer(RuntimeLayer::new(handle));
+
+    let _guard = runtime.enter();
+    let op = pyo3_opendal::ocore::blocking::Operator::new(op).map_err(|err| {
+        pyo3::exceptions::PyValueError::new_err(format!("blocking build error: {err}"))
+    })?;
+
+    Ok(OpendalOperator::new(op))
 }
 
 /// Factory function to create a new FS async operator
@@ -51,10 +61,14 @@ pub fn create_fs_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<Open
         map = kwargs.extract::<HashMap<String, String>>()?;
     }
 
-    // Build the FS async operator
-    let core = build_operator(FS_SCHEME, map.clone())?;
+    let runtime = pyo3_async_runtimes::tokio::get_runtime();
+    let handle = runtime.handle().clone();
 
-    Ok(OpendalAsyncOperator::new(core))
+    let op = Operator::via_iter(FS_SCHEME, map)
+        .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
+        .layer(RuntimeLayer::new(handle));
+
+    Ok(OpendalAsyncOperator::new(op))
 }
 
 /// FS-specific helper functions

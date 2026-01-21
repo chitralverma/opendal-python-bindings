@@ -41,6 +41,7 @@ futures = { workspace = true }
 jiff = { workspace = true }
 mea = { workspace = true }
 opendal-core = { workspace = true, features = ["blocking"] }
+pin-project = "1"
 pyo3 = { workspace = true }
 pyo3-async-runtimes = { workspace = true }
 pyo3-stub-gen = { workspace = true }

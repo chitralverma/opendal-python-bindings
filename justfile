@@ -126,7 +126,8 @@ install-dev *args: stub-gen
 # Run tests
 [group('dev')]
 [working-directory('opendal')]
-test *args: install-dev
+test *args:
+    @just install-dev
     @echo "{{ BOLD }}--- Running tests ---{{ NORMAL }}"
     @uv run pytest -v {{ args }}
 

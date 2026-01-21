@@ -1043,8 +1043,10 @@ version = "0.47.0"
 dependencies = [
  "opendal-service-fs 0.55.0",
  "pyo3",
+ "pyo3-async-runtimes",
  "pyo3-opendal",
  "pyo3-stub-gen",
+ "tokio",
 ]
 
 [[package]]
@@ -1066,8 +1068,10 @@ version = "0.47.0"
 dependencies = [
  "opendal-service-s3 0.55.0",
  "pyo3",
+ "pyo3-async-runtimes",
  "pyo3-opendal",
  "pyo3-stub-gen",
+ "tokio",
 ]
 
 [[package]]
@@ -1152,6 +1156,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67eabc2ef2a60eb7faa00097bd1ffdb5bd28e62bf39990626a582201b7a754e5"
 dependencies = [
  "siphasher",
+]
+
+[[package]]
+name = "pin-project"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "677f1add503faace112b9f1373e43e9e054bfdd22ff1a63c1bc485eaec6a6a8a"
+dependencies = [
+ "pin-project-internal",
+]
+
+[[package]]
+name = "pin-project-internal"
+version = "1.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e918e4ff8c4549eb882f14b3a4bc8c8bc93de829416eacf579f1207a8fbf861"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.114",
 ]
 
 [[package]]
@@ -1294,6 +1318,7 @@ dependencies = [
  "jiff",
  "mea",
  "opendal-core",
+ "pin-project",
  "pyo3",
  "pyo3-async-runtimes",
  "pyo3-stub-gen",
