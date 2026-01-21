@@ -28,7 +28,7 @@ pub trait PythonLayer: Send + Sync {
     fn layer_blocking(&self, op: ocore::blocking::Operator) -> ocore::blocking::Operator;
 }
 
-impl PythonLayer for RuntimeLayer {
+impl PythonLayer for PyRuntimeLayer {
     fn layer(&self, op: Operator) -> Operator {
         op.layer(self.clone())
     }
@@ -37,8 +37,14 @@ impl PythonLayer for RuntimeLayer {
         // Since RuntimeLayer only implements async Access, applying it to a blocking Operator
         // will force the Operator to use the async-to-blocking adapter (using the runtime).
         // This is exactly what we want for cross-binary compatibility.
+
         let op: Operator = op.into();
         let op = op.layer(self.clone());
+
+        let runtime = pyo3_async_runtimes::tokio::get_runtime();
+
+        let _guard = runtime.enter();
+
         ocore::blocking::Operator::new(op)
             .expect("RuntimeLayer must be valid for blocking operator")
     }
@@ -56,7 +62,7 @@ impl PyLayer {
     pub fn new() -> PyResult<Self> {
         let runtime = pyo3_async_runtimes::tokio::get_runtime();
         let handle = runtime.handle().clone();
-        Ok(Self(Box::new(RuntimeLayer::new(handle))))
+        Ok(Self(Box::new(PyRuntimeLayer::new(handle))))
     }
 
     /// Apply the layer to an async operator (passed as capsule) and return a new operator (as capsule).
@@ -85,18 +91,46 @@ impl PyLayer {
 }
 
 /// A layer that enters a Tokio runtime context before delegating to the inner accessor.
+///
+/// # Purpose
+///
+/// This layer bridges the execution gap caused by Rust's static linking model in a modular
+/// Python extension architecture. When `opendal` (Core) and `opendal-service-fs` (Service)
+/// are compiled as separate binaries, they each contain their own independent instance of
+/// the Tokio runtime and thread-local variables.
+///
+/// Without this layer, executing an operation (like `fs_op.read()`) initiates the future in
+/// the Core binary but executes the I/O logic (like `tokio::fs`) in the Service binary.
+/// The Service binary's code looks for its own Tokio reactor context, finds it missing
+/// (because the call stack originated in Core), and panics with "no reactor running".
+///
+/// # Mechanism
+///
+/// `PyRuntimeLayer` captures a `tokio::runtime::Handle` during initialization (which happens
+/// inside the Service binary). It then wraps every async operation in a `RuntimeFuture`.
+/// When this future is polled, it temporarily "enters" the captured runtime context via
+/// `handle.enter()`. This ensures that the Service's Tokio I/O primitives can always find
+/// their corresponding reactor, regardless of which binary is driving the execution.
+///
+/// # Performance Implications
+///
+/// *   **Micro-level:** There is a negligible CPU overhead (nanoseconds) per poll cycle due
+///     to Thread-Local Storage (TLS) context switching.
+/// *   **Macro-level:** Since each Service extension initializes its own Tokio runtime,
+///     loading multiple services results in multiple thread pools running in the background.
+///     This increases resource usage (threads, memory) compared to a monolithic build.
 #[derive(Debug, Clone)]
-pub struct RuntimeLayer {
+pub struct PyRuntimeLayer {
     handle: tokio::runtime::Handle,
 }
 
-impl RuntimeLayer {
+impl PyRuntimeLayer {
     pub fn new(handle: tokio::runtime::Handle) -> Self {
         Self { handle }
     }
 }
 
-impl<A: ocore::raw::Access> ocore::raw::Layer<A> for RuntimeLayer {
+impl<A: ocore::raw::Access> ocore::raw::Layer<A> for PyRuntimeLayer {
     type LayeredAccess = RuntimeAccessor<A>;
 
     fn layer(&self, inner: A) -> Self::LayeredAccess {

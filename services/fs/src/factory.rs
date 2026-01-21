@@ -20,11 +20,10 @@
 //! This module provides factory functions that create core operator types
 //! configured for FS service, ensuring type compatibility with layers.
 
-use opendal_service_fs::FS_SCHEME;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3_opendal::export::{OpendalAsyncOperator, OpendalOperator};
-use pyo3_opendal::layers::RuntimeLayer;
+use pyo3_opendal::layers::PyRuntimeLayer;
 use pyo3_opendal::ocore::Operator;
 use std::collections::HashMap;
 
@@ -40,9 +39,9 @@ pub fn create_fs_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
     let runtime = pyo3_async_runtimes::tokio::get_runtime();
     let handle = runtime.handle().clone();
 
-    let op = Operator::via_iter(FS_SCHEME, map)
+    let op = Operator::via_iter(opendal_service_fs::FS_SCHEME, map)
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
-        .layer(RuntimeLayer::new(handle));
+        .layer(PyRuntimeLayer::new(handle));
 
     let _guard = runtime.enter();
     let op = pyo3_opendal::ocore::blocking::Operator::new(op).map_err(|err| {
@@ -64,9 +63,9 @@ pub fn create_fs_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<Open
     let runtime = pyo3_async_runtimes::tokio::get_runtime();
     let handle = runtime.handle().clone();
 
-    let op = Operator::via_iter(FS_SCHEME, map)
+    let op = Operator::via_iter(opendal_service_fs::FS_SCHEME, map)
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
-        .layer(RuntimeLayer::new(handle));
+        .layer(PyRuntimeLayer::new(handle));
 
     Ok(OpendalAsyncOperator::new(op))
 }
