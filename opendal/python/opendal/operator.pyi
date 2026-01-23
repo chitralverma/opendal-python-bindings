@@ -43,22 +43,6 @@ class AsyncOperator:
     Operator
     """
 
-    def __new__(cls, scheme: builtins.str, **kwargs: typing.Any) -> AsyncOperator:
-        r"""
-        Create a new `AsyncOperator`.
-
-        Parameters
-        ----------
-        scheme : str
-            The scheme of the service.
-        **kwargs : dict
-            The options for the service.
-
-        Returns
-        -------
-        AsyncOperator
-            The new async operator.
-        """
     def layer(self, layer: typing.Any) -> AsyncOperator:
         r"""
         Add a new layer to the operator.

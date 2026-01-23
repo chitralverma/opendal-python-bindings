@@ -768,6 +768,7 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     The new async operator.
+    #[gen_stub(skip)]
     #[new]
     #[pyo3(signature = (scheme, * ,**kwargs))]
     pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
