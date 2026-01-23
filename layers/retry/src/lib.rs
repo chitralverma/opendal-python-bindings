@@ -20,8 +20,8 @@
 use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
-mod factory;
-pub use factory::*;
+mod retry;
+pub use retry::*;
 
 #[pymodule(gil_used = false)]
 fn _layer_retry(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -30,14 +30,7 @@ fn _layer_retry(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add version
     opyo3::add_version!(m)?;
 
-    // Export factory functions instead of operator classes
-    // m.add_function(wrap_pyfunction!(create_fs_operator, m)?)?;
-    // m.add_function(wrap_pyfunction!(create_fs_async_operator, m)?)?;
-    m.add_class::<factory::PyRetryLayer>()?;
-
-    // Type aliases for backward compatibility
-    m.add("PyOperator", py.get_type::<opyo3::PyOperator>())?;
-    m.add("PyAsyncOperator", py.get_type::<opyo3::PyAsyncOperator>())?;
+    m.add_class::<retry::PyRetryLayer>()?;
 
     Ok(())
 }

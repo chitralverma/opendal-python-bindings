@@ -20,8 +20,8 @@
 use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
-mod factory;
-pub use factory::*;
+mod fs;
+pub use fs::*;
 
 use opyo3::default_registry;
 use std::sync::Once;
@@ -37,11 +37,10 @@ pub fn init() {
 #[pymodule(gil_used = false)]
 fn _service_fs(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     opyo3::check_debug_build!(py, env!("CARGO_PKG_NAME"))?;
+    init();
 
     // Add version
     opyo3::add_version!(m)?;
-
-    init();
 
     // Export factory functions instead of operator classes
     m.add_function(wrap_pyfunction!(create_fs_operator, m)?)?;

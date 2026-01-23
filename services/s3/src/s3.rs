@@ -15,12 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//! Factory functions for creating FS service operators
+//! Factory functions for creating S3 service operators
 //!
 //! This module provides factory functions that create core operator types
-//! configured for FS service, ensuring type compatibility with layers.
+//! configured for S3 service, ensuring type compatibility with layers.
 
-use opendal_service_fs::FS_SCHEME;
+use opendal_service_s3::S3_SCHEME;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3_opendal::export::OpendalOperator;
@@ -28,10 +28,10 @@ use pyo3_opendal::layers::PyRuntimeLayer;
 use pyo3_opendal::ocore::Operator;
 use std::collections::HashMap;
 
-/// Factory function to create a new FS blocking operator
+/// Factory function to create a new S3 blocking operator
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub fn create_fs_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
+pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
     let mut map = HashMap::new();
     if let Some(kwargs) = kwargs {
         map = kwargs.extract::<HashMap<String, String>>()?;
@@ -40,17 +40,22 @@ pub fn create_fs_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
     let runtime = pyo3_async_runtimes::tokio::get_runtime();
     let handle = runtime.handle().clone();
 
-    let op = Operator::via_iter(FS_SCHEME, map.clone())
+    let op = Operator::via_iter(S3_SCHEME, map.clone())
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
         .layer(PyRuntimeLayer::new(handle));
+
+    let _guard = runtime.enter();
+    let op = pyo3_opendal::ocore::blocking::Operator::new(op).map_err(|err| {
+        pyo3::exceptions::PyValueError::new_err(format!("blocking build error: {err}"))
+    })?;
 
     Ok(OpendalOperator::new(op, map, false))
 }
 
-/// Factory function to create a new FS async operator
+/// Factory function to create a new S3 async operator
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub fn create_fs_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
+pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
     let mut map = HashMap::new();
     if let Some(kwargs) = kwargs {
         map = kwargs.extract::<HashMap<String, String>>()?;
@@ -59,37 +64,9 @@ pub fn create_fs_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<Open
     let runtime = pyo3_async_runtimes::tokio::get_runtime();
     let handle = runtime.handle().clone();
 
-    let op = Operator::via_iter(FS_SCHEME, map.clone())
+    let op = Operator::via_iter(S3_SCHEME, map.clone())
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
         .layer(PyRuntimeLayer::new(handle));
 
     Ok(OpendalOperator::new(op, map, true))
-}
-
-/// FS-specific helper functions
-#[pyclass]
-pub struct FsHelper {
-    // FS-specific helper methods can go here
-}
-
-#[pymethods]
-impl FsHelper {
-    /// Validate FS path format
-    #[staticmethod]
-    fn validate_path(path: &str) -> PyResult<bool> {
-        // FS-specific validation logic
-        Ok(!path.is_empty())
-    }
-
-    /// Get FS-specific capabilities
-    #[staticmethod]
-    fn get_capabilities() -> PyResult<Vec<String>> {
-        Ok(vec![
-            "read".to_string(),
-            "write".to_string(),
-            "delete".to_string(),
-            "list".to_string(),
-            "stat".to_string(),
-        ])
-    }
 }
