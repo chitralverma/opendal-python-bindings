@@ -20,6 +20,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use pyo3::IntoPyObjectExt;
+use pyo3::intern;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyCapsule, PyDict, PyTuple};
 use pyo3_async_runtimes::tokio::future_into_py;
@@ -131,8 +132,14 @@ impl PyOperator {
         capsule: &Bound<PyCapsule>,
         map: HashMap<String, String>,
     ) -> PyResult<Self> {
-        let core = crate::ffi::from_operator_capsule(capsule)?;
-        let __scheme = core.info().scheme().to_string();
+        let op = crate::ffi::from_operator_capsule(capsule)?;
+        let __scheme = op.info().scheme().to_string();
+
+        // Convert async operator to blocking operator
+        let runtime = pyo3_async_runtimes::tokio::get_runtime();
+        let _guard = runtime.enter();
+        let core = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
+
         Ok(PyOperator {
             core,
             __scheme,
@@ -152,17 +159,27 @@ impl PyOperator {
     /// Operator
     ///     A new operator with the layer added.
     pub fn layer(&self, py: Python, layer: &Bound<PyAny>) -> PyResult<Self> {
+        // Convert to async operator for layering
+        let op_async: ocore::Operator = self.core.clone().into();
+
         if let Ok(layer) = layer.extract::<Py<layers::PyLayer>>() {
-            let op = self.core.clone();
-            let new_op = layer.get().0.layer_blocking(op);
+            // Native layer application
+            let new_op_async = layer.get().0.layer(op_async);
+
+            // Convert back to blocking
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            let _guard = runtime.enter();
+            let new_op = ocore::blocking::Operator::new(new_op_async).map_err(format_pyerr)?;
+
             Ok(PyOperator {
                 core: new_op,
                 __scheme: self.__scheme.clone(),
                 __map: self.__map.clone(),
             })
         } else {
-            let capsule = crate::ffi::to_operator_capsule(py, self.core.clone())?;
-            let new_capsule = layer.call_method1("_layer_apply_blocking", (capsule,))?;
+            // Capsule delegation
+            let capsule = crate::ffi::to_operator_capsule(py, op_async)?;
+            let new_capsule = layer.call_method1(intern!(py, "_layer_apply"), (capsule,))?;
             let new_capsule = new_capsule.downcast::<PyCapsule>()?;
             Self::_from_capsule(new_capsule, self.__map.clone())
         }
@@ -815,7 +832,7 @@ impl PyAsyncOperator {
         capsule: &Bound<PyCapsule>,
         map: HashMap<String, String>,
     ) -> PyResult<Self> {
-        let core = crate::ffi::from_async_operator_capsule(capsule)?;
+        let core = crate::ffi::from_operator_capsule(capsule)?;
         let __scheme = core.info().scheme().to_string();
         Ok(PyAsyncOperator {
             core,
@@ -845,8 +862,8 @@ impl PyAsyncOperator {
                 __map: self.__map.clone(),
             })
         } else {
-            let capsule = crate::ffi::to_async_operator_capsule(py, self.core.clone())?;
-            let new_capsule = layer.call_method1("_layer_apply", (capsule,))?;
+            let capsule = crate::ffi::to_operator_capsule(py, self.core.clone())?;
+            let new_capsule = layer.call_method1(intern!(py, "_layer_apply"), (capsule,))?;
             let new_capsule = new_capsule.downcast::<PyCapsule>()?;
             Self::_from_capsule(new_capsule, self.__map.clone())
         }

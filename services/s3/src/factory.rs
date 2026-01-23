@@ -23,7 +23,7 @@
 use opendal_service_s3::S3_SCHEME;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use pyo3_opendal::export::{OpendalAsyncOperator, OpendalOperator};
+use pyo3_opendal::export::OpendalOperator;
 use pyo3_opendal::layers::PyRuntimeLayer;
 use pyo3_opendal::ocore::Operator;
 use std::collections::HashMap;
@@ -49,13 +49,13 @@ pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
         pyo3::exceptions::PyValueError::new_err(format!("blocking build error: {err}"))
     })?;
 
-    Ok(OpendalOperator::new(op, map))
+    Ok(OpendalOperator::new(op, map, false))
 }
 
 /// Factory function to create a new S3 async operator
 #[pyfunction]
 #[pyo3(signature = (**kwargs))]
-pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalAsyncOperator> {
+pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
     let mut map = HashMap::new();
     if let Some(kwargs) = kwargs {
         map = kwargs.extract::<HashMap<String, String>>()?;
@@ -68,7 +68,7 @@ pub fn create_s3_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<Open
         .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
         .layer(PyRuntimeLayer::new(handle));
 
-    Ok(OpendalAsyncOperator::new(op, map))
+    Ok(OpendalOperator::new(op, map, true))
 }
 
 /// S3-specific helper functions

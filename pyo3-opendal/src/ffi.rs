@@ -24,34 +24,16 @@ use crate::layers::PythonLayer;
 use crate::ocore;
 
 const OPENDAL_OPERATOR_CAPSULE_NAME: &str = "opendal_operator";
-const OPENDAL_ASYNC_OPERATOR_CAPSULE_NAME: &str = "opendal_async_operator";
 const OPENDAL_LAYER_CAPSULE_NAME: &str = "opendal_layer";
 
-/// Export an [`ocore::blocking::Operator`] to a PyCapsule.
-pub fn to_operator_capsule(
-    py: Python,
-    op: ocore::blocking::Operator,
-) -> PyResult<Bound<PyCapsule>> {
+/// Export an [`ocore::Operator`] to a PyCapsule.
+pub fn to_operator_capsule(py: Python, op: ocore::Operator) -> PyResult<Bound<PyCapsule>> {
     let name = CString::new(OPENDAL_OPERATOR_CAPSULE_NAME).unwrap();
     PyCapsule::new(py, op, Some(name))
 }
 
-/// Import an [`ocore::blocking::Operator`] from a PyCapsule.
-pub fn from_operator_capsule(capsule: &Bound<PyCapsule>) -> PyResult<ocore::blocking::Operator> {
-    unsafe {
-        let ptr = capsule.pointer();
-        Ok((*(ptr as *const ocore::blocking::Operator)).clone())
-    }
-}
-
-/// Export an [`ocore::Operator`] to a PyCapsule.
-pub fn to_async_operator_capsule(py: Python, op: ocore::Operator) -> PyResult<Bound<PyCapsule>> {
-    let name = CString::new(OPENDAL_ASYNC_OPERATOR_CAPSULE_NAME).unwrap();
-    PyCapsule::new(py, op, Some(name))
-}
-
 /// Import an [`ocore::Operator`] from a PyCapsule.
-pub fn from_async_operator_capsule(capsule: &Bound<PyCapsule>) -> PyResult<ocore::Operator> {
+pub fn from_operator_capsule(capsule: &Bound<PyCapsule>) -> PyResult<ocore::Operator> {
     unsafe {
         let ptr = capsule.pointer();
         Ok((*(ptr as *const ocore::Operator)).clone())

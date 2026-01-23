@@ -99,15 +99,6 @@ impl opyo3::PythonLayer for PyRetryLayer {
     fn layer(&self, op: opyo3::ocore::Operator) -> opyo3::ocore::Operator {
         op.layer(self.l.clone())
     }
-
-    fn layer_blocking(
-        &self,
-        op: opyo3::ocore::blocking::Operator,
-    ) -> opyo3::ocore::blocking::Operator {
-        let o: ocore::Operator = op.clone().into();
-
-        opyo3::ocore::blocking::Operator::new(o.layer(self.l.clone())).expect("msg")
-    }
 }
 
 #[gen_stub_pymethods]

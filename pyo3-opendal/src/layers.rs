@@ -25,28 +25,11 @@ use std::task::{Context, Poll};
 
 pub trait PythonLayer: Send + Sync {
     fn layer(&self, op: Operator) -> Operator;
-    fn layer_blocking(&self, op: ocore::blocking::Operator) -> ocore::blocking::Operator;
 }
 
 impl PythonLayer for PyRuntimeLayer {
     fn layer(&self, op: Operator) -> Operator {
         op.layer(self.clone())
-    }
-
-    fn layer_blocking(&self, op: ocore::blocking::Operator) -> ocore::blocking::Operator {
-        // Since RuntimeLayer only implements async Access, applying it to a blocking Operator
-        // will force the Operator to use the async-to-blocking adapter (using the runtime).
-        // This is exactly what we want for cross-binary compatibility.
-
-        let op: Operator = op.into();
-        let op = op.layer(self.clone());
-
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-
-        let _guard = runtime.enter();
-
-        ocore::blocking::Operator::new(op)
-            .expect("RuntimeLayer must be valid for blocking operator")
     }
 }
 
@@ -65,27 +48,15 @@ impl PyLayer {
         Ok(Self(Box::new(PyRuntimeLayer::new(handle))))
     }
 
-    /// Apply the layer to an async operator (passed as capsule) and return a new operator (as capsule).
+    /// Apply the layer to an operator (passed as capsule) and return a new operator (as capsule).
     #[gen_stub(skip)]
     fn _layer_apply<'py>(
         &self,
         py: Python<'py>,
         op_capsule: &Bound<'py, PyCapsule>,
     ) -> PyResult<Bound<'py, PyCapsule>> {
-        let op = crate::ffi::from_async_operator_capsule(op_capsule)?;
-        let new_op = self.0.layer(op);
-        crate::ffi::to_async_operator_capsule(py, new_op)
-    }
-
-    /// Apply the layer to a blocking operator (passed as capsule) and return a new operator (as capsule).
-    #[gen_stub(skip)]
-    fn _layer_apply_blocking<'py>(
-        &self,
-        py: Python<'py>,
-        op_capsule: &Bound<'py, PyCapsule>,
-    ) -> PyResult<Bound<'py, PyCapsule>> {
         let op = crate::ffi::from_operator_capsule(op_capsule)?;
-        let new_op = self.0.layer_blocking(op);
+        let new_op = self.0.layer(op);
         crate::ffi::to_operator_capsule(py, new_op)
     }
 }

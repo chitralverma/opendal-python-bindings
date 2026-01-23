@@ -15,28 +15,25 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use crate::ffi::{to_async_operator_capsule, to_operator_capsule};
-
+use crate::ffi::to_operator_capsule;
 use crate::ocore;
-
-use pyo3::intern;
-
-use pyo3::prelude::*;
-
 use pyo3::IntoPyObjectExt;
-
+use pyo3::intern;
+use pyo3::prelude::*;
 use std::collections::HashMap;
 
-/// A wrapper around [`ocore::blocking::Operator`] that implements [`IntoPyObject`] to convert to a
-/// runtime-available `opendal.Operator`.
+/// A wrapper around [`ocore::Operator`] that implements [`IntoPyObject`] to convert to a
+/// runtime-available `opendal.Operator` or `opendal.AsyncOperator`.
+
 pub struct OpendalOperator {
-    op: ocore::blocking::Operator,
+    op: ocore::Operator,
     map: HashMap<String, String>,
+    is_async: bool,
 }
 
 impl OpendalOperator {
-    pub fn new(op: ocore::blocking::Operator, map: HashMap<String, String>) -> Self {
-        Self { op, map }
+    pub fn new(op: ocore::Operator, map: HashMap<String, String>, is_async: bool) -> Self {
+        Self { op, map, is_async }
     }
 }
 
@@ -49,36 +46,15 @@ impl<'py> IntoPyObject<'py> for OpendalOperator {
         let opendal_mod = py.import(intern!(py, "opendal"))?;
         let capsule = to_operator_capsule(py, self.op)?;
         let map = self.map.into_py_any(py)?;
+
+        let class_name = if self.is_async {
+            "AsyncOperator"
+        } else {
+            "Operator"
+        };
+
         opendal_mod
-            .getattr(intern!(py, "Operator"))?
-            .call_method1(intern!(py, "_from_capsule"), (capsule, map))
-    }
-}
-
-/// A wrapper around [`ocore::Operator`] that implements [`IntoPyObject`] to convert to a
-/// runtime-available `opendal.AsyncOperator`.
-pub struct OpendalAsyncOperator {
-    op: ocore::Operator,
-    map: HashMap<String, String>,
-}
-
-impl OpendalAsyncOperator {
-    pub fn new(op: ocore::Operator, map: HashMap<String, String>) -> Self {
-        Self { op, map }
-    }
-}
-
-impl<'py> IntoPyObject<'py> for OpendalAsyncOperator {
-    type Target = PyAny;
-    type Output = Bound<'py, PyAny>;
-    type Error = PyErr;
-
-    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        let opendal_mod = py.import(intern!(py, "opendal"))?;
-        let capsule = to_async_operator_capsule(py, self.op)?;
-        let map = self.map.into_py_any(py)?;
-        opendal_mod
-            .getattr(intern!(py, "AsyncOperator"))?
+            .getattr(class_name)?
             .call_method1(intern!(py, "_from_capsule"), (capsule, map))
     }
 }
