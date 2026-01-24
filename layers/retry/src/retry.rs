@@ -35,21 +35,11 @@ use std::time::Duration;
 #[gen_stub_pyclass]
 #[pyclass(name = "RetryLayer", extends=opyo3::PyLayer)]
 #[derive(Clone)]
-pub struct PyRetryLayer {
-    pub l: opendal_layer_retry::RetryLayer,
-}
-// pub struct PyRetryLayer {
-//     int_layer: opendal_layer_retry::RetryLayer,
-//     max_times: Option<usize>,
-//     factor: Option<f32>,
-//     jitter: bool,
-//     max_delay: Option<f64>,
-//     min_delay: Option<f64>,
-//     // FS-specific helper methods can go here
-// }
+pub struct PyRetryLayer(opendal_layer_retry::RetryLayer);
+
 impl opyo3::PythonLayer for PyRetryLayer {
     fn layer(&self, op: opyo3::ocore::Operator) -> opyo3::ocore::Operator {
-        op.layer(self.l.clone())
+        op.layer(self.0.clone())
     }
 }
 
@@ -74,7 +64,8 @@ impl PyRetryLayer {
     /// Returns
     /// -------
     /// RetryLayer
-    #[gen_stub(override_return_type(type_repr = "RetryLayer"))]
+    // #[gen_stub(override_return_type(type_repr = "RetryLayer"))]
+    #[gen_stub(override_return_type(type_repr = "opendal.layers.Layer", imports=("opendal")))]
     #[new]
     #[pyo3(signature = (
         max_times = None,
@@ -107,9 +98,7 @@ impl PyRetryLayer {
             retry = retry.with_min_delay(Duration::from_micros((min_delay * 1_000_000.0) as u64));
         }
 
-        let retry_layer = Self { l: retry };
-        let class = PyClassInitializer::from(opyo3::PyLayer::new()?).add_subclass(retry_layer);
-
+        let class = PyClassInitializer::from(opyo3::PyLayer::new()?).add_subclass(Self(retry));
         Ok(class)
     }
 }

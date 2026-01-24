@@ -15,32 +15,10 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from opendal.layers import Layer
 from opendal_layer_retry._layer_retry import (
-    RetryLayer as _RetryLayer,
-)
-from opendal_layer_retry._layer_retry import (
+    RetryLayer,
     __version__,
 )
-
-
-class RetryLayer(Layer):
-    def __init__(
-        self,
-        max_times: int | None = None,
-        factor: float | None = None,
-        jitter: bool = False,
-        max_delay: float | None = None,
-        min_delay: float | None = None,
-    ) -> None:
-        self._inner = _RetryLayer(max_times, factor, jitter, max_delay, min_delay)
-
-    def _layer_apply(self, op_capsule):
-        return self._inner._layer_apply(op_capsule)
-
-    def _layer_apply_blocking(self, op_capsule):
-        return self._inner._layer_apply_blocking(op_capsule)
-
 
 __all__ = [
     "__version__",

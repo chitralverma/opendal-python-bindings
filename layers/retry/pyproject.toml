@@ -37,7 +37,6 @@ requires-python = ">=3.12"
 opendal = { workspace = true }
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
 module-name = "opendal_layer_retry._layer_retry"
 python-source = "python"
 strip = true

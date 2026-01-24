@@ -30,7 +30,7 @@ rust-version = { workspace = true }
 version = { workspace = true }
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "rlib"]
 name = "_service_s3"
 
 [[bin]]

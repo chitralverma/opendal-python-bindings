@@ -60,7 +60,6 @@ benchmark = [
 # opendal-layer-retry = { workspace = true }
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
 module-name = "opendal._core"
 python-source = "python"
 strip = true
