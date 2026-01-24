@@ -49,7 +49,7 @@ pub fn create_s3_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOpe
         pyo3::exceptions::PyValueError::new_err(format!("blocking build error: {err}"))
     })?;
 
-    Ok(OpendalOperator::new(op, map, false))
+    Ok(OpendalOperator::new(op.into(), map, false))
 }
 
 /// Factory function to create a new S3 async operator
