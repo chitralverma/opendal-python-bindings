@@ -16,7 +16,6 @@
 // under the License.
 
 use crate::opyo3;
-use opendal_layer_retry;
 use pyo3::prelude::*;
 use pyo3_stub_gen::derive::*;
 use std::time::Duration;

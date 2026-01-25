@@ -15,11 +15,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use std::collections::HashMap;
 use std::os::raw::c_int;
+
+use crate::Unexpected;
+use crate::ocore::Configurator;
 
 use pyo3::IntoPyObjectExt;
 use pyo3::ffi;
 use pyo3::prelude::*;
+use serde_json::Value;
 
 /// A bytes-like object that implements buffer protocol.
 #[pyclass(module = "opendal")]
@@ -140,4 +145,97 @@ macro_rules! check_debug_build {
         }
         Ok::<_, pyo3::PyErr>(())
     }};
+}
+
+#[macro_export]
+macro_rules! define_build_operator {
+    () => {
+        #[pyfunction]
+        #[pyo3(signature = (scheme, is_async, **kwargs))]
+        pub fn __build_operator__(
+            scheme: String,
+            is_async: bool,
+            kwargs: Option<&Bound<PyDict>>,
+        ) -> PyResult<OpendalOperator> {
+            use pyo3::types::PyDict;
+            use std::collections::HashMap;
+
+            let opts = kwargs
+                .map(|v| {
+                    v.extract::<HashMap<String, String>>()
+                        .expect("must be valid hashmap")
+                })
+                .unwrap_or_default();
+
+            let uri = (scheme, opts.clone())
+                .into_operator_uri()
+                .map_err(pyo3_opendal::format_pyerr)?;
+
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            let handle = runtime.handle().clone();
+
+            let op = Operator::from_uri(uri.clone())
+                .map_err(pyo3_opendal::format_pyerr)?
+                .layer(PyRuntimeLayer::new(handle));
+
+            Ok(OpendalOperator::new(op, opts, is_async))
+        }
+    };
+}
+
+pub trait FromConfigurator: Sized {
+    fn from_configurator<C>(cfg: &C) -> PyResult<Self>
+    where
+        C: Configurator + serde::Serialize;
+}
+
+impl<T> FromConfigurator for T
+where
+    T: serde::de::DeserializeOwned,
+{
+    fn from_configurator<C>(cfg: &C) -> PyResult<Self>
+    where
+        C: Configurator + serde::Serialize,
+    {
+        let v = serde_json::to_value(cfg)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))?;
+
+        serde_json::from_value(v)
+            .map_err(|e| PyErr::new::<pyo3::exceptions::PyValueError, _>(e.to_string()))
+    }
+}
+
+pub trait ToStringMap {
+    fn to_string_map(&self) -> PyResult<HashMap<String, String>>;
+}
+
+impl<T: serde::Serialize> ToStringMap for T {
+    fn to_string_map(&self) -> PyResult<HashMap<String, String>> {
+        let json = serde_json::to_value(self).map_err(|_| {
+            Unexpected::new_err(format!(
+                "Internal serialization error for instance of {}",
+                std::any::type_name::<T>()
+            ))
+        })?;
+
+        let mut map = HashMap::new();
+
+        if let Value::Object(obj) = json {
+            for (k, v) in obj {
+                match v {
+                    Value::String(s) => {
+                        map.insert(k, s);
+                    }
+                    Value::Null => {
+                        // skip
+                    }
+                    other => {
+                        map.insert(k, other.to_string());
+                    }
+                }
+            }
+        }
+
+        Ok(map)
+    }
 }

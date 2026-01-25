@@ -15,53 +15,81 @@
 // specific language governing permissions and limitations
 // under the License.
 
-//! Factory functions for creating FS service operators
-//!
-//! This module provides factory functions that create core operator types
-//! configured for FS service, ensuring type compatibility with layers.
+use opendal_service_fs::FsConfig;
+use std::path::PathBuf;
 
-use opendal_service_fs::FS_SCHEME;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
+use pyo3_opendal::FromConfigurator;
+use pyo3_opendal::ToStringMap;
 use pyo3_opendal::export::OpendalOperator;
-use pyo3_opendal::layers::PyRuntimeLayer;
+use pyo3_opendal::ocore::Configurator;
 use pyo3_opendal::ocore::Operator;
+use pyo3_opendal::ocore::OperatorUri;
+use pyo3_stub_gen::derive::*;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-/// Factory function to create a new FS blocking operator
-#[pyfunction]
-#[pyo3(signature = (**kwargs))]
-pub fn create_fs_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
-    let mut map = HashMap::new();
-    if let Some(kwargs) = kwargs {
-        map = kwargs.extract::<HashMap<String, String>>()?;
-    }
+#[gen_stub_pyclass]
+#[pyclass(get_all, set_all, name = "FsService")]
+#[derive(Clone, Default, Serialize, Deserialize)]
+pub struct PyFsService {
+    /// root dir for backend
+    pub root: PathBuf,
 
-    let runtime = pyo3_async_runtimes::tokio::get_runtime();
-    let handle = runtime.handle().clone();
-
-    let op = Operator::via_iter(FS_SCHEME, map.clone())
-        .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
-        .layer(PyRuntimeLayer::new(handle));
-
-    Ok(OpendalOperator::new(op.into(), map, false))
+    /// tmp dir for atomic write
+    pub atomic_write_dir: Option<String>,
 }
 
-/// Factory function to create a new FS async operator
-#[pyfunction]
-#[pyo3(signature = (**kwargs))]
-pub fn create_fs_async_operator(kwargs: Option<&Bound<PyDict>>) -> PyResult<OpendalOperator> {
-    let mut map = HashMap::new();
-    if let Some(kwargs) = kwargs {
-        map = kwargs.extract::<HashMap<String, String>>()?;
+impl From<PyFsService> for FsConfig {
+    fn from(opts: PyFsService) -> Self {
+        let mut cfg = FsConfig::default();
+        cfg.root = Some(opts.root.as_os_str().to_string_lossy().into_owned());
+        cfg.atomic_write_dir = opts.atomic_write_dir;
+        cfg
+    }
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl PyFsService {
+    #[staticmethod]
+    #[pyo3(signature = (**kwargs))]
+    pub fn from_config(kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
+        let map: HashMap<String, String> =
+            kwargs.map(|d| d.extract()).transpose()?.unwrap_or_default();
+        let cfg = FsConfig::from_iter(map).map_err(pyo3_opendal::format_pyerr)?;
+
+        Self::from_configurator(&cfg)
     }
 
-    let runtime = pyo3_async_runtimes::tokio::get_runtime();
-    let handle = runtime.handle().clone();
+    #[staticmethod]
+    #[pyo3(signature = (uri, **kwargs))]
+    pub fn from_uri(uri: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
+        let map: HashMap<String, String> =
+            kwargs.map(|d| d.extract()).transpose()?.unwrap_or_default();
 
-    let op = Operator::via_iter(FS_SCHEME, map.clone())
-        .map_err(|err| pyo3::exceptions::PyValueError::new_err(format!("build error: {err}")))?
-        .layer(PyRuntimeLayer::new(handle));
+        let cfg = OperatorUri::new(uri, map)
+            .and_then(|u| FsConfig::from_uri(&u))
+            .map_err(pyo3_opendal::format_pyerr)?;
 
-    Ok(OpendalOperator::new(op, map, true))
+        Self::from_configurator(&cfg)
+    }
+
+    #[gen_stub(override_return_type(type_repr = "opendal.AsyncOperator", imports=("opendal")))]
+    pub fn to_async_operator(&self) -> PyResult<OpendalOperator> {
+        let cfg: FsConfig = self.clone().into();
+        let map = cfg.to_string_map()?;
+        let op = Operator::from_config(cfg)
+            .map_err(pyo3_opendal::format_pyerr)?
+            .finish();
+
+        Ok(OpendalOperator::new(op, map, true))
+    }
+
+    #[gen_stub(override_return_type(type_repr = "opendal.Operator", imports=("opendal")))]
+    pub fn to_operator(&self) -> PyResult<OpendalOperator> {
+        let op = self.to_async_operator()?;
+        Ok(OpendalOperator::new(op.op, op.map, false))
+    }
 }

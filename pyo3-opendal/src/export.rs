@@ -24,11 +24,10 @@ use std::collections::HashMap;
 
 /// A wrapper around [`ocore::Operator`] that implements [`IntoPyObject`] to convert to a
 /// runtime-available `opendal.Operator` or `opendal.AsyncOperator`.
-
 pub struct OpendalOperator {
-    op: ocore::Operator,
-    map: HashMap<String, String>,
-    is_async: bool,
+    pub op: ocore::Operator,
+    pub map: HashMap<String, String>,
+    pub is_async: bool,
 }
 
 impl OpendalOperator {

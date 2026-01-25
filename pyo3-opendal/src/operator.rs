@@ -22,26 +22,57 @@ use std::time::Duration;
 use pyo3::IntoPyObjectExt;
 use pyo3::intern;
 use pyo3::prelude::*;
+use pyo3::types::IntoPyDict;
 use pyo3::types::{PyBytes, PyCapsule, PyDict, PyTuple};
 use pyo3_async_runtimes::tokio::future_into_py;
 
 use crate::*;
 
-pub fn build_operator(scheme: &str, map: HashMap<String, String>) -> PyResult<ocore::Operator> {
-    let op = ocore::Operator::via_iter(scheme, map).map_err(format_pyerr)?;
-    Ok(op)
-}
-
-pub fn build_blocking_operator(
+/// Build an operator wrapper by dispatching to a Python service extension.
+///
+/// This utility normalizes the given `scheme`, dynamically imports the
+/// corresponding Python module (`opendal_service_<scheme>`), and calls its
+/// `__build_operator__` function to construct an operator wrapper.
+///
+/// The Python-side `__build_operator__` function is expected to return an
+/// instance of a `PyOperator` or `PyAsyncOperator`.
+fn build_service_operator<'p>(
+    py: Python<'p>,
     scheme: &str,
-    map: HashMap<String, String>,
-) -> PyResult<ocore::blocking::Operator> {
-    let op = ocore::Operator::via_iter(scheme, map).map_err(format_pyerr)?;
+    kwargs: Option<&Bound<'p, PyDict>>,
+    is_async: bool,
+) -> PyResult<Bound<'p, PyAny>> {
+    let scheme = normalize_scheme(scheme);
 
-    let runtime = pyo3_async_runtimes::tokio::get_runtime();
-    let _guard = runtime.enter();
-    let op = ocore::blocking::Operator::new(op).map_err(format_pyerr)?;
-    Ok(op)
+    let module_name = format!("opendal_service_{}", scheme.replace('-', "_"));
+    let module = py.import(module_name.as_str()).map_err(|err| {
+        let e = Unsupported::new_err(format!(
+            "Unable to import package {} for scheme {}",
+            module_name, scheme
+        ));
+        e.set_cause(py, Some(err));
+        e
+    })?;
+
+    let func_name = intern!(py, "__build_operator__");
+    let func = module.getattr(func_name).map_err(|err| {
+        let e = Unexpected::new_err(format!(
+            "Package {} for scheme {}, does not contain the function {}",
+            module_name, scheme, func_name
+        ));
+        e.set_cause(py, Some(err));
+        e
+    })?;
+
+    let args = (scheme.as_str(), is_async).into_pyobject(py)?;
+    func.call(args, kwargs).map_err(|err| {
+        let e = Unexpected::new_err(format!(
+            "Unable to build operator with package {} for scheme {}",
+            module_name, scheme
+        ));
+        e.set_cause(py, Some(err));
+        e
+    })
 }
 
 fn normalize_scheme(raw: &str) -> String {
@@ -84,45 +115,34 @@ impl PyOperator {
     #[pyo3(signature = (scheme, *, **kwargs))]
     pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
         let scheme = normalize_scheme(scheme);
-        let map = kwargs
-            .map(|v| {
-                v.extract::<HashMap<String, String>>()
-                    .expect("must be valid hashmap")
+
+        if scheme == "memory" {
+            let map = kwargs
+                .map(|v| {
+                    v.extract::<HashMap<String, String>>()
+                        .expect("must be valid hashmap")
+                })
+                .unwrap_or_default();
+            let op = ocore::Operator::via_iter(&scheme, map.clone()).map_err(format_pyerr)?;
+            let runtime = pyo3_async_runtimes::tokio::get_runtime();
+            let _guard = runtime.enter();
+
+            Ok(PyOperator {
+                core: ocore::blocking::Operator::new(op).map_err(format_pyerr)?,
+                __scheme: scheme,
+                __map: map,
             })
-            .unwrap_or_default();
+        } else {
+            // Try to dispatch to service extension
+            let res: PyRef<PyOperator> =
+                build_service_operator(py, &scheme, kwargs, false).and_then(|res| res.extract())?;
 
-        // Try to dispatch to service extension
-        let module_name = format!("opendal_service_{}", scheme.replace('-', "_"));
-        if let Ok(module) = py.import(module_name.as_str()) {
-            let func_name = format!("create_{}_operator", scheme.replace('-', "_"));
-            if let Ok(func) = module.getattr(func_name.as_str()) {
-                // We must use the kwargs passed to us.
-                // call(args, kwargs)
-                let args = PyTuple::empty(py);
-                match func.call(args, kwargs) {
-                    Ok(res) => {
-                        let wrapper: PyRef<PyOperator> = res.extract()?;
-                        return Ok(PyOperator {
-                            core: wrapper.core.clone(),
-                            __scheme: wrapper.__scheme.clone(),
-                            __map: wrapper.__map.clone(),
-                        });
-                    }
-                    Err(e) => {
-                        // If dispatch failed, maybe print why?
-                        // or just propagate it if we are sure it's the right service.
-                        // But if scheme is "fs", and "opendal_service_fs" exists, then failure is bad.
-                        return Err(e);
-                    }
-                }
-            }
+            Ok(PyOperator {
+                core: res.core.clone(),
+                __scheme: res.__scheme.clone(),
+                __map: res.__map.clone(),
+            })
         }
-
-        Ok(PyOperator {
-            core: build_blocking_operator(&scheme, map.clone())?,
-            __scheme: scheme,
-            __map: map,
-        })
     }
 
     /// Create a new operator from a PyCapsule.
@@ -723,12 +743,12 @@ impl PyOperator {
     /// -------
     /// AsyncOperator
     ///     The async operator.
-    pub fn to_async_operator(&self) -> PyResult<PyAsyncOperator> {
-        Ok(PyAsyncOperator {
-            core: self.core.clone().into(),
-            __scheme: self.__scheme.clone(),
-            __map: self.__map.clone(),
-        })
+    pub fn to_async_operator(&self, py: Python) -> PyResult<PyAsyncOperator> {
+        PyAsyncOperator::new(
+            py,
+            &self.__scheme,
+            Some(&self.__map.clone().into_py_dict(py)?),
+        )
     }
 
     fn __repr__(&self) -> String {
@@ -791,38 +811,29 @@ impl PyAsyncOperator {
     pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
         let scheme = normalize_scheme(scheme);
 
-        let map = kwargs
-            .map(|v| {
-                v.extract::<HashMap<String, String>>()
-                    .expect("must be valid hashmap")
+        if scheme == "memory" {
+            let map = kwargs
+                .map(|v| {
+                    v.extract::<HashMap<String, String>>()
+                        .expect("must be valid hashmap")
+                })
+                .unwrap_or_default();
+            Ok(PyAsyncOperator {
+                core: ocore::Operator::via_iter(&scheme, map.clone()).map_err(format_pyerr)?,
+                __scheme: scheme,
+                __map: map,
             })
-            .unwrap_or_default();
+        } else {
+            // Try to dispatch to service extension
+            let res: PyRef<PyAsyncOperator> =
+                build_service_operator(py, &scheme, kwargs, true).and_then(|res| res.extract())?;
 
-        // Try to dispatch to service extension
-        let module_name = format!("opendal_service_{}", scheme.replace('-', "_"));
-        if let Ok(module) = py.import(module_name.as_str()) {
-            let func_name = format!("create_{}_async_operator", scheme.replace('-', "_"));
-            if let Ok(func) = module.getattr(func_name.as_str()) {
-                let args = PyTuple::empty(py);
-                match func.call(args, kwargs) {
-                    Ok(res) => {
-                        let wrapper: PyRef<PyAsyncOperator> = res.extract()?;
-                        return Ok(PyAsyncOperator {
-                            core: wrapper.core.clone(),
-                            __scheme: wrapper.__scheme.clone(),
-                            __map: wrapper.__map.clone(),
-                        });
-                    }
-                    Err(e) => return Err(e),
-                }
-            }
+            Ok(PyAsyncOperator {
+                core: res.core.clone(),
+                __scheme: res.__scheme.clone(),
+                __map: res.__map.clone(),
+            })
         }
-
-        Ok(PyAsyncOperator {
-            core: build_operator(&scheme, map.clone())?,
-            __scheme: scheme,
-            __map: map,
-        })
     }
 
     /// Create a new async operator from a PyCapsule.
@@ -1687,16 +1698,12 @@ impl PyAsyncOperator {
     /// -------
     /// Operator
     ///     The blocking operator.
-    pub fn to_operator(&self) -> PyResult<PyOperator> {
-        let runtime = pyo3_async_runtimes::tokio::get_runtime();
-        let _guard = runtime.enter();
-        let op = ocore::blocking::Operator::new(self.core.clone()).map_err(format_pyerr)?;
-
-        Ok(PyOperator {
-            core: op,
-            __scheme: self.__scheme.clone(),
-            __map: self.__map.clone(),
-        })
+    pub fn to_operator<'p>(&'p self, py: Python<'p>) -> PyResult<PyOperator> {
+        PyOperator::new(
+            py,
+            &self.__scheme,
+            Some(&self.__map.clone().into_py_dict(py)?),
+        )
     }
 
     fn __repr__(&self) -> String {
