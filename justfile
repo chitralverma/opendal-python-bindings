@@ -34,7 +34,7 @@ workspace_root := `uv workspace dir`
 [group('maintenance')]
 setup:
     @echo "{{ BOLD }}--- Installing/ validating dependencies ---{{ NORMAL }}"
-    @uv sync --managed-python --all-packages --all-groups --all-extras --compile-bytecode --no-install-workspace
+    @uv sync --managed-python --all-packages --all-groups --all-extras --compile-bytecode
 
 # Clean up all caches, build artifacts, and the venv
 [group('maintenance')]

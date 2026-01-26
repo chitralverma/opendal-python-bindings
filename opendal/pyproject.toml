@@ -62,7 +62,6 @@ benchmark = [
 [tool.maturin]
 module-name = "opendal._core"
 python-source = "python"
-strip = true
 
 [build-system]
 build-backend = "maturin"

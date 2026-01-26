@@ -23,7 +23,6 @@ from random import choices, randint
 from uuid import uuid4
 
 import pytest
-
 from opendal.exceptions import ConditionNotMatch, NotFound
 
 

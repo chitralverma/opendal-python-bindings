@@ -16,13 +16,13 @@
 // under the License.
 
 use crate::*;
-use dict_derive::FromPyObject;
 use ocore::raw::BytesRange;
 use pyo3::pyclass;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[pyclass(module = "opendal")]
-#[derive(FromPyObject, Default)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct ReadOptions {
     pub version: Option<String>,
     pub concurrent: Option<usize>,
@@ -50,7 +50,7 @@ impl ReadOptions {
 }
 
 #[pyclass(module = "opendal")]
-#[derive(FromPyObject, Default)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct WriteOptions {
     pub append: Option<bool>,
     pub chunk: Option<usize>,
@@ -119,7 +119,7 @@ impl From<WriteOptions> for ocore::options::WriteOptions {
 }
 
 #[pyclass(module = "opendal")]
-#[derive(FromPyObject, Default, Debug)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct ListOptions {
     pub limit: Option<usize>,
     pub start_after: Option<String>,
@@ -141,7 +141,7 @@ impl From<ListOptions> for ocore::options::ListOptions {
 }
 
 #[pyclass(module = "opendal")]
-#[derive(FromPyObject, Default, Debug)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct StatOptions {
     pub version: Option<String>,
     pub if_match: Option<String>,

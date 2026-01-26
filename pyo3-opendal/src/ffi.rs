@@ -15,7 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 
 use pyo3::prelude::*;
 use pyo3::types::{PyCapsule, PyCapsuleMethods};
@@ -23,37 +23,35 @@ use pyo3::types::{PyCapsule, PyCapsuleMethods};
 use crate::layers::PythonLayer;
 use crate::ocore;
 
-const OPENDAL_OPERATOR_CAPSULE_NAME: &str = "opendal_operator";
-const OPENDAL_LAYER_CAPSULE_NAME: &str = "opendal_layer";
+const OPENDAL_OPERATOR_CAPSULE_NAME: &CStr = c"opendal_operator";
+const OPENDAL_LAYER_CAPSULE_NAME: &CStr = c"opendal_layer";
 
 /// Export an [`ocore::Operator`] to a PyCapsule.
 pub fn to_operator_capsule(py: Python, op: ocore::Operator) -> PyResult<Bound<PyCapsule>> {
-    let name = CString::new(OPENDAL_OPERATOR_CAPSULE_NAME).unwrap();
-    PyCapsule::new(py, op, Some(name))
+    PyCapsule::new(py, op, Some(CString::from(OPENDAL_OPERATOR_CAPSULE_NAME)))
 }
 
 /// Import an [`ocore::Operator`] from a PyCapsule.
 pub fn from_operator_capsule(capsule: &Bound<PyCapsule>) -> PyResult<ocore::Operator> {
-    unsafe {
-        let ptr = capsule.pointer();
-        Ok((*(ptr as *const ocore::Operator)).clone())
-    }
+    let ptr = capsule
+        .pointer_checked(Some(OPENDAL_OPERATOR_CAPSULE_NAME))?
+        .cast::<ocore::Operator>();
+    Ok(unsafe { ptr.as_ref().clone() })
 }
 
 /// Export a [`Box<dyn PythonLayer>`] to a PyCapsule.
 ///
 /// Note: This consumes the box.
 pub fn to_layer_capsule(py: Python, layer: Box<dyn PythonLayer>) -> PyResult<Bound<PyCapsule>> {
-    let name = CString::new(OPENDAL_LAYER_CAPSULE_NAME).unwrap();
-    PyCapsule::new(py, layer, Some(name))
+    PyCapsule::new(py, layer, Some(CString::from(OPENDAL_LAYER_CAPSULE_NAME)))
 }
 
 /// Import a [`Box<dyn PythonLayer>`] from a PyCapsule.
 pub fn from_layer_capsule<'a>(
     capsule: &'a Bound<'a, PyCapsule>,
 ) -> PyResult<&'a Box<dyn PythonLayer>> {
-    unsafe {
-        let ptr = capsule.pointer();
-        Ok(&*(ptr as *const Box<dyn PythonLayer>))
-    }
+    let ptr = capsule
+        .pointer_checked(Some(OPENDAL_LAYER_CAPSULE_NAME))?
+        .cast();
+    Ok(unsafe { ptr.as_ref() })
 }

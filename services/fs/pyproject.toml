@@ -39,7 +39,6 @@ opendal = { workspace = true }
 [tool.maturin]
 module-name = "opendal_service_fs._service_fs"
 python-source = "python"
-strip = true
 
 [build-system]
 build-backend = "maturin"

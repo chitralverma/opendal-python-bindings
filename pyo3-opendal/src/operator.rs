@@ -25,6 +25,7 @@ use pyo3::prelude::*;
 use pyo3::types::IntoPyDict;
 use pyo3::types::{PyBytes, PyCapsule, PyDict, PyTuple};
 use pyo3_async_runtimes::tokio::future_into_py;
+use pythonize::depythonize;
 
 use crate::*;
 
@@ -117,11 +118,9 @@ impl PyOperator {
         let scheme = normalize_scheme(scheme);
 
         if scheme == "memory" {
-            let map = kwargs
-                .map(|v| {
-                    v.extract::<HashMap<String, String>>()
-                        .expect("must be valid hashmap")
-                })
+            let map: HashMap<String, String> = kwargs
+                .map(|d| depythonize(d))
+                .transpose()?
                 .unwrap_or_default();
             let op = ocore::Operator::via_iter(&scheme, map.clone()).map_err(format_pyerr)?;
             let runtime = pyo3_async_runtimes::tokio::get_runtime();
@@ -135,7 +134,7 @@ impl PyOperator {
         } else {
             // Try to dispatch to service extension
             let res: PyRef<PyOperator> =
-                build_service_operator(py, &scheme, kwargs, false).and_then(|res| res.extract())?;
+                build_service_operator(py, &scheme, kwargs, false)?.extract()?;
 
             Ok(PyOperator {
                 core: res.core.clone(),
@@ -200,7 +199,7 @@ impl PyOperator {
             // Capsule delegation
             let capsule = crate::ffi::to_operator_capsule(py, op_async)?;
             let new_capsule = layer.call_method1(intern!(py, "_layer_apply"), (capsule,))?;
-            let new_capsule = new_capsule.downcast::<PyCapsule>()?;
+            let new_capsule = new_capsule.cast::<PyCapsule>()?;
             Self::_from_capsule(new_capsule, self.__map.clone())
         }
     }
@@ -231,14 +230,13 @@ impl PyOperator {
     ) -> PyResult<File> {
         let this = self.core.clone();
         let path = path.to_string_lossy().to_string();
-
-        let reader_opts = kwargs
-            .map(|v| v.extract::<ReadOptions>())
+        let reader_opts: ReadOptions = kwargs
+            .map(|d| depythonize(d))
             .transpose()?
             .unwrap_or_default();
 
-        let writer_opts = kwargs
-            .map(|v| v.extract::<WriteOptions>())
+        let writer_opts: WriteOptions = kwargs
+            .map(|d| depythonize(d))
             .transpose()?
             .unwrap_or_default();
 
@@ -812,11 +810,9 @@ impl PyAsyncOperator {
         let scheme = normalize_scheme(scheme);
 
         if scheme == "memory" {
-            let map = kwargs
-                .map(|v| {
-                    v.extract::<HashMap<String, String>>()
-                        .expect("must be valid hashmap")
-                })
+            let map: HashMap<String, String> = kwargs
+                .map(|d| depythonize(d))
+                .transpose()?
                 .unwrap_or_default();
             Ok(PyAsyncOperator {
                 core: ocore::Operator::via_iter(&scheme, map.clone()).map_err(format_pyerr)?,
@@ -826,7 +822,7 @@ impl PyAsyncOperator {
         } else {
             // Try to dispatch to service extension
             let res: PyRef<PyAsyncOperator> =
-                build_service_operator(py, &scheme, kwargs, true).and_then(|res| res.extract())?;
+                build_service_operator(py, &scheme, kwargs, true)?.extract()?;
 
             Ok(PyAsyncOperator {
                 core: res.core.clone(),
@@ -875,7 +871,7 @@ impl PyAsyncOperator {
         } else {
             let capsule = crate::ffi::to_operator_capsule(py, self.core.clone())?;
             let new_capsule = layer.call_method1(intern!(py, "_layer_apply"), (capsule,))?;
-            let new_capsule = new_capsule.downcast::<PyCapsule>()?;
+            let new_capsule = new_capsule.cast::<PyCapsule>()?;
             Self::_from_capsule(new_capsule, self.__map.clone())
         }
     }
@@ -912,13 +908,13 @@ impl PyAsyncOperator {
         let this = self.core.clone();
         let path = path.to_string_lossy().to_string();
 
-        let reader_opts = kwargs
-            .map(|v| v.extract::<ReadOptions>())
+        let reader_opts: ReadOptions = kwargs
+            .map(|d| depythonize(d))
             .transpose()?
             .unwrap_or_default();
 
-        let writer_opts = kwargs
-            .map(|v| v.extract::<WriteOptions>())
+        let writer_opts: WriteOptions = kwargs
+            .map(|d| depythonize(d))
             .transpose()?
             .unwrap_or_default();
 

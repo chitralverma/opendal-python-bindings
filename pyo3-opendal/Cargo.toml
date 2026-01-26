@@ -36,7 +36,6 @@ crate-type = ["rlib"]
 
 [dependencies]
 bytes = { workspace = true }
-dict_derive = { workspace = true }
 futures = { workspace = true }
 jiff = { workspace = true }
 mea = { workspace = true }
@@ -45,6 +44,7 @@ pin-project = "1"
 pyo3 = { workspace = true }
 pyo3-async-runtimes = { workspace = true }
 pyo3-stub-gen = { workspace = true }
+pythonize = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
