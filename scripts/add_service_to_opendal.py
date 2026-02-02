@@ -44,6 +44,7 @@ def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
     service_key = f"service-{service_name}"
     if service_key not in opt_deps:
         opt_deps[service_key] = [f"opendal-service-{service_name}"]
+    project["optional-dependencies"] = opt_deps
 
     # 2. Update [tool.uv.sources]
     if "tool" not in doc:
