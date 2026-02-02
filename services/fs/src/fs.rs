@@ -16,7 +16,6 @@
 // under the License.
 
 use opendal_service_fs::FsConfig;
-use std::path::PathBuf;
 
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -33,18 +32,19 @@ use std::collections::HashMap;
 #[gen_stub_pyclass]
 #[pyclass(get_all, set_all, name = "FsService")]
 #[derive(Clone, Default, Serialize, Deserialize)]
+#[allow(deprecated)]
 pub struct PyFsService {
     /// root dir for backend
-    pub root: PathBuf,
-
+    pub root: Option<String>,
     /// tmp dir for atomic write
     pub atomic_write_dir: Option<String>,
 }
 
 impl From<PyFsService> for FsConfig {
+    #[allow(deprecated)]
     fn from(opts: PyFsService) -> Self {
         let mut cfg = FsConfig::default();
-        cfg.root = Some(opts.root.as_os_str().to_string_lossy().into_owned());
+        cfg.root = opts.root;
         cfg.atomic_write_dir = opts.atomic_write_dir;
         cfg
     }

@@ -24,7 +24,7 @@ default: help
 
 set ignore-comments := true
 
-workspace_root := `uv workspace dir`
+workspace_root := `uv --preview-features workspace-dir workspace dir`
 
 # ==============================================================================
 # Setup & Maintenance
