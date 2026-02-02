@@ -23,8 +23,8 @@ use pyo3::types::PyDict;
 use pyo3_stub_gen::define_stub_info_gatherer;
 
 #[allow(deprecated)]
-mod fs;
-pub use fs::*;
+mod {{ service_snake }};
+pub use {{ service_snake }}::*;
 
 use opyo3::PyRuntimeLayer;
 use opyo3::default_registry;
@@ -38,14 +38,14 @@ static INIT: Once = Once::new();
 
 pub fn init() {
     INIT.call_once(|| {
-        opendal_service_fs::register_fs_service(default_registry());
+        opendal_service_{{ service_snake }}::register_{{ service_snake }}_service(default_registry());
     });
 }
 
 define_build_operator!();
 
 #[pymodule(gil_used = false)]
-fn _service_fs(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _service_{{ service_snake }}(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     opyo3::check_debug_build!(py, env!("CARGO_PKG_NAME"))?;
     init();
 
@@ -53,7 +53,7 @@ fn _service_fs(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     opyo3::add_version!(m)?;
 
     m.add_function(wrap_pyfunction!(__build_operator__, m)?)?;
-    m.add_class::<PyFsService>()?;
+    m.add_class::<Py{{ service_pascal }}Service>()?;
 
     Ok(())
 }

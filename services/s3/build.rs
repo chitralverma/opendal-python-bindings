@@ -26,8 +26,10 @@ fn main() -> anyhow::Result<()> {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let package_path = Path::new(&manifest_dir);
 
+    // Generate the code
     let code = pyo3_opendal::codegen::service::generate("s3", package_path)?;
 
+    // Write to src/s3.rs
     fs::write(package_path.join("src/s3.rs"), code)?;
 
     Ok(())

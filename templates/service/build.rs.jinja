@@ -21,16 +21,15 @@ use std::path::Path;
 
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=Cargo.toml");
-    println!("cargo:rerun-if-changed=src/config.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let package_path = Path::new(&manifest_dir);
 
     // Generate the code
-    let code = pyo3_opendal::codegen::service::generate("fs", package_path)?;
+    let code = pyo3_opendal::codegen::service::generate("{{ service_name }}", package_path)?;
 
-    // Write to src/fs.rs
-    fs::write(package_path.join("src/fs.rs"), code)?;
+    // Write to src/{{ service_snake }}.rs
+    fs::write(package_path.join("src/{{ service_snake }}.rs"), code)?;
 
     Ok(())
 }
