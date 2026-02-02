@@ -51,23 +51,16 @@ clean:
 # Dev & Build
 # ==============================================================================
 
-# Generate bindings for all services
+# Generate Python type stubs
 [group('dev')]
-[private]
-codegen-services:
+stub-gen:
+    @echo "{{ BOLD }}--- Generating stubs for (opendal) ---{{ NORMAL }}"
+    @cargo run --quiet --package opendal-python --bin stub_gen
     @find "{{ workspace_root }}/services" -maxdepth 1 -mindepth 1 -type d \
         -exec bash -c 'SERVICE_DIR="$0"; \
         SERVICE_NAME=$(basename "$SERVICE_DIR"); \
-        echo "{{ BOLD }}--- Generating bindings for (opendal-service-${SERVICE_NAME}) ---{{ NORMAL }}"; \
+        echo "{{ BOLD }}--- Generating stubs for (opendal-service-${SERVICE_NAME}) ---{{ NORMAL }}"; \
         cargo run --quiet --manifest-path ${SERVICE_DIR}/Cargo.toml --bin stub_gen_"${SERVICE_NAME}";' {} \;
-
-# Generate Python type stubs
-[group('dev')]
-stub-gen: setup
-    @just codegen-services
-    @echo "{{ BOLD }}--- Generating Python type stubs ---{{ NORMAL }}"
-    @cargo run --quiet --package opendal-python --bin stub_gen
-    @echo "{{ BOLD }}--- Formatting and fixing generated stubs ---{{ NORMAL }}"
     -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
     @just fmt
 
