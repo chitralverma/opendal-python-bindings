@@ -146,6 +146,7 @@ generate-service service_name: setup
     @uv run copier copy --data service_name={{ service_name }} {{ workspace_root }}/templates/service {{ workspace_root }}/services/{{ service_name }}
     @uv run python {{ workspace_root }}/scripts/add_service_to_opendal.py {{ replace(service_name, '_', '-') }} {{ workspace_root }}
     @cargo run --quiet --manifest-path {{ workspace_root }}/services/{{ service_name }}/Cargo.toml --bin stub_gen_{{ replace(service_name, '-', '_') }}
+    -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
     @just fmt
     @echo "{{ BOLD }}--- Service package (opendal-service-{{ replace(service_name, '_', '-') }}) is ready ---{{ NORMAL }}"
 

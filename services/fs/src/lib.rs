@@ -21,8 +21,11 @@ use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use pyo3_stub_gen::define_stub_info_gatherer;
+
+#[allow(deprecated)]
 mod fs;
 pub use fs::*;
+
 use opyo3::PyRuntimeLayer;
 use opyo3::default_registry;
 use opyo3::define_build_operator;

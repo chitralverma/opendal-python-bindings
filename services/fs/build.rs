@@ -21,9 +21,8 @@ use std::path::Path;
 
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=Cargo.toml");
-    println!("cargo:rerun-if-changed=src/config.rs"); // Trigger rebuild if config changes
+    println!("cargo:rerun-if-changed=src/config.rs");
 
-    // In build.rs, CARGO_MANIFEST_DIR points to the package root
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let package_path = Path::new(&manifest_dir);
 
@@ -31,8 +30,6 @@ fn main() -> anyhow::Result<()> {
     let code = pyo3_opendal::codegen::service::generate("fs", package_path)?;
 
     // Write to src/fs.rs
-    // Note: Writing to src/ in build.rs is generally discouraged but used here
-    // to maintain the existing file structure and allow IDE support.
     fs::write(package_path.join("src/fs.rs"), code)?;
 
     Ok(())
