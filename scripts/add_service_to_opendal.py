@@ -65,6 +65,8 @@ def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
         t.update({"workspace": True})
         sources[package_key] = t
 
+    uv["sources"] = sources
+
     # Write back
     with pyproject_path.open(mode="w") as f:
         content = tomlkit.dumps(doc)
