@@ -2,7 +2,7 @@
 
 ## Breaking change: Native blocking API removed
 
-OpenDAL has removed the native blocking API in the core. The Python binding's blocking API now uses an async runtime internally. This is a transparent change and should not affect most users, but:
+OpenDAL has removed the native blocking API in the core. The Python bindings' blocking API now uses an async runtime internally. This is a transparent change and should not affect most users, but:
 
 - The blocking API now requires an async runtime to be available
 - Performance characteristics may be slightly different

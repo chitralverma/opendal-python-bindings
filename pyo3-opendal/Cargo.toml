@@ -21,7 +21,7 @@ publish = false
 
 authors = { workspace = true }
 categories = { workspace = true }
-description = "Apache OpenDAL™ Python Binding (pyo3)"
+description = "Apache OpenDAL™ Python Bindings (pyo3)"
 edition = { workspace = true }
 homepage = { workspace = true }
 keywords = { workspace = true }

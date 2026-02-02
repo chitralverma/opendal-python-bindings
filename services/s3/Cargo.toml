@@ -19,7 +19,7 @@
 name = "opendal-service-s3"
 
 authors = { workspace = true }
-description = "Apache OpenDAL™ Python Binding (s3 service)"
+description = "Apache OpenDAL™ Python Bindings (s3 service)"
 edition = { workspace = true }
 homepage = { workspace = true }
 keywords = []

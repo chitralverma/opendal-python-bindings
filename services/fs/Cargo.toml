@@ -19,7 +19,7 @@
 name = "opendal-service-fs"
 
 authors = { workspace = true }
-description = "Apache OpenDAL™ Python Binding (fs service)"
+description = "Apache OpenDAL™ Python Bindings (fs service)"
 edition = { workspace = true }
 homepage = { workspace = true }
 keywords = []

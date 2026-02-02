@@ -23,7 +23,7 @@ resolver = "2"
 [workspace.package]
 authors = ["Apache OpenDAL <dev@opendal.apache.org>"]
 categories = []
-description = "Apache OpenDAL™ Python Binding (workspace)"
+description = "Apache OpenDAL™ Python Bindings (workspace)"
 edition = "2024"
 homepage = "https://opendal.apache.org/"
 keywords = []
