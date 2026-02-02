@@ -18,8 +18,9 @@
 use pyo3_stub_gen::Result;
 
 fn main() -> Result<()> {
-    // `stub_info` is a function defined by `define_stub_info_gatherer!` macro.
-    let stub = _s3_service::stub_info()?;
-    stub.generate()?;
-    Ok(())
+    pyo3_opendal::codegen::generate_service_stub(
+        "s3",
+        env!("CARGO_PKG_NAME"),
+        _service_s3::stub_info,
+    )
 }

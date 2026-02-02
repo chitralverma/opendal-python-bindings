@@ -15,15 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// expose the opendal-pyo3 as `opyo3`.
-// We will use `opyo3::Xxx` to represents all types from opendal-pyo3.
-use ::opendal_pyo3 as opyo3;
+// expose the pyo3-opendal as `opyo3`.
+// We will use `opyo3::Xxx` to represents all types from pyo3-opendal.
+use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use pyo3_stub_gen::define_stub_info_gatherer;
 mod fs;
 pub use fs::*;
-
+use opyo3::PyRuntimeLayer;
 use opyo3::default_registry;
+use opyo3::define_build_operator;
+use opyo3::export::OpendalOperator;
+use opyo3::ocore::IntoOperatorUri;
+use opyo3::ocore::Operator;
 use std::sync::Once;
 
 static INIT: Once = Once::new();
@@ -34,21 +39,18 @@ pub fn init() {
     });
 }
 
-#[pymodule(gil_used = false)]
-fn _fs_service(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Add version
-    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+define_build_operator!();
 
+#[pymodule(gil_used = false)]
+fn _service_fs(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+    opyo3::check_debug_build!(py, env!("CARGO_PKG_NAME"))?;
     init();
 
-    // Operator module
-    opyo3::add_pymodule!(
-        py,
-        m,
-        "opendal_fs_service",
-        "operator",
-        [FsPyOperator, FsPyAsyncOperator]
-    )?;
+    // Add version
+    opyo3::add_version!(m)?;
+
+    m.add_function(wrap_pyfunction!(__build_operator__, m)?)?;
+    m.add_class::<PyFsService>()?;
 
     Ok(())
 }

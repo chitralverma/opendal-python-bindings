@@ -16,7 +16,7 @@
 # under the License.
 
 [project]
-name = "opendal-s3-service"
+name = "opendal-service-s3"
 
 dependencies = ["opendal"]
 dynamic = [
@@ -31,24 +31,15 @@ dynamic = [
   "project_url",
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
 [tool.uv.sources]
 opendal = { workspace = true }
 
 [tool.maturin]
-module-name = "opendal_s3_service._s3_service"
-python-packages = ["opendal_s3_service"]
-python-source = "src"
-
-[tool.uv]
-cache-keys = [
-  { file = "pyproject.toml" },
-  { file = "src/**/*.rs" },
-  { file = "Cargo.toml" },
-  { file = "Cargo.lock" },
-]
+module-name = "opendal_service_s3._service_s3"
+python-source = "python"
 
 [build-system]
 build-backend = "maturin"
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin>=1.9.4,<2.0"]

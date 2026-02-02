@@ -26,7 +26,7 @@ excludes = [
   "**/DEPENDENCIES.*.tsv",
   "**/DEPENDENCIES.*.csv",
 
-  # Python binding related files
+  # Python bindings related files
   "**/venv/**",
 
   # Website generated files
@@ -40,7 +40,7 @@ excludes = [
   # Test files
   "**/tests/data/**",
   "**/fixtures/data/**",
-  # dart binding generated file
+  # dart bindings generated file
   "bindings/dart/opendal_api.dart",
   "*generated*",
 ]

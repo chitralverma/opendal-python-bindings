@@ -68,10 +68,7 @@ ban-relative-imports = "all"
 [lint.flake8-type-checking]
 strict = true
 
-[lint.isort]
-known-first-party = ["opendal"]
-
 [lint.per-file-ignores]
-"*.pyi" = ["PYI021", "ANN401", "D418"]
+"*.pyi" = ["PYI021", "D401", "D205", "W505", "ANN401", "D418"]
 "**/benchmark/*" = ["D100", "D101", "D103", "ANN201"]
 "**/tests/*" = ["D101", "D100", "D103", "ANN201", "ANN001"]

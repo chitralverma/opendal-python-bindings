@@ -24,7 +24,7 @@ default: help
 
 set ignore-comments := true
 
-workspace_root := `uv workspace dir`
+workspace_root := `uv workspace dir --preview-features workspace-dir`
 
 # ==============================================================================
 # Setup & Maintenance
@@ -43,7 +43,7 @@ clean:
     @cargo clean --quiet
     @echo "{{ BOLD }}--- Removing build directories, other caches, python bytecode and compiled extensions ---{{ NORMAL }}"
     @find {{ workspace_root }} \
-        \( -type d \( -name __pycache__ -o -name .venv -o -name .build -o -name .pytest_cache -o -name .mypy_cache -o -name .hypothesis -o -name .ruff_cache \) -prune -exec rm -rf {} + \) \
+        \( -type d \( -name __pycache__ -o -name .venv -o -name .build -o -name dist -o -name .pytest_cache -o -name .mypy_cache -o -name .hypothesis -o -name .ruff_cache \) -prune -exec rm -rf {} + \) \
         -o \
         \( -type f \( -name '*.py[co]' -o -name '_*.so' \) -delete \)
 
@@ -53,12 +53,14 @@ clean:
 
 # Generate Python type stubs
 [group('dev')]
-stub-gen: setup
-    @echo "{{ BOLD }}--- Generating Python type stubs ---{{ NORMAL }}"
-    # TODO: generate in services
-    # @cargo run --quiet --manifest-path=../../dev/Cargo.toml -- generate -l python
-    @cargo run --quiet --package opendal-python-core --bin stub_gen
-    @echo "{{ BOLD }}--- Formatting and fixing generated stubs ---{{ NORMAL }}"
+stub-gen:
+    @echo "{{ BOLD }}--- Generating stubs for (opendal) ---{{ NORMAL }}"
+    @cargo run --quiet --package opendal-python --bin stub_gen
+    @find "{{ workspace_root }}/services" -maxdepth 1 -mindepth 1 -type d \
+        -exec bash -c 'SERVICE_DIR="$0"; \
+        SERVICE_NAME=$(basename "$SERVICE_DIR"); \
+        echo "{{ BOLD }}--- Generating stubs for (opendal-service-${SERVICE_NAME}) ---{{ NORMAL }}"; \
+        cargo run --quiet --manifest-path ${SERVICE_DIR}/Cargo.toml --bin stub_gen_"${SERVICE_NAME}";' {} \;
     -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
     @just fmt
 
@@ -126,7 +128,8 @@ install-dev *args: stub-gen
 # Run tests
 [group('dev')]
 [working-directory('opendal')]
-test *args: install-dev
+test *args:
+    @just install-dev
     @echo "{{ BOLD }}--- Running tests ---{{ NORMAL }}"
     @uv run pytest -v {{ args }}
 

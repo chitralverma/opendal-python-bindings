@@ -31,11 +31,15 @@ dynamic = [
   "project_url",
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 
-[project.optional-dependencies]
-service-s3 = ["opendal-s3-service"]
-# layer-logging = ["opendal-logging==0.1.0"]
+# [project.optional-dependencies]
+# # Services
+# service-fs = ["opendal-service-fs"]
+# service-s3 = ["opendal-service-s3"]
+
+# # Layers
+# layer-retry = ["opendal-layer-retry"]
 
 [dependency-groups]
 benchmark = [
@@ -46,32 +50,19 @@ benchmark = [
   "greenlet>=3.1.1",
   "pydantic>=2.10.6",
 ]
-dev = ["maturin>=1.0,<2.0"]
-docs = ["mkdocs", "mkdocs-material", "mkdocstrings[python]", "mkdocs-jupyter"]
-lint = ["ruff>=0.9.10"]
-test = [
-  "pytest>=8.3.5",
-  "pytest-asyncio>=0.25.3",
-  "python-dotenv>=1.0.1",
-  "pydantic-settings>=2.8.1",
-]
 
-[tool.uv.sources]
-opendal-s3-service = { workspace = true }
+# [tool.uv.sources]
+# # Services
+# opendal-service-fs = { workspace = true }
+# opendal-service-s3 = { workspace = true }
+
+# # Layers
+# opendal-layer-retry = { workspace = true }
 
 [tool.maturin]
 module-name = "opendal._core"
-python-packages = ["opendal"]
-python-source = "src"
-
-[tool.uv]
-cache-keys = [
-  { file = "pyproject.toml" },
-  { file = "src/**/*.rs" },
-  { file = "Cargo.toml" },
-  { file = "Cargo.lock" },
-]
+python-source = "python"
 
 [build-system]
 build-backend = "maturin"
-requires = ["maturin>=1.0,<2.0"]
+requires = ["maturin>=1.9.4,<2.0"]

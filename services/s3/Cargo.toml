@@ -16,10 +16,10 @@
 # under the License.
 
 [package]
-name = "opendal_s3_service"
+name = "opendal-service-s3"
 
 authors = { workspace = true }
-description = "Apache OpenDAL™ Python Binding (s3 service)"
+description = "Apache OpenDAL™ Python Bindings (s3 service)"
 edition = { workspace = true }
 homepage = { workspace = true }
 keywords = []
@@ -31,14 +31,22 @@ version = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "_s3_service"
+name = "_service_s3"
 
 [[bin]]
 doc = false
 name = "stub_gen_s3"
 
 [dependencies]
-opendal-pyo3 = { path = "../../opendal-pyo3" }
 opendal-service-s3 = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { workspace = true }
+pyo3-async-runtimes = { workspace = true }
+pyo3-opendal = { workspace = true, features = ["runtime", "stub-gen"] }
 pyo3-stub-gen = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+
+[build-dependencies]
+anyhow = { workspace = true }
+pyo3-opendal = { workspace = true, features = ["codegen"] }
