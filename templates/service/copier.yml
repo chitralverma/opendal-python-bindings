@@ -27,7 +27,7 @@ service_pascal:
 service_snake:
   type: str
   help: "Name of the service in snake_case (e.g. fs, s3, hdfs_native)"
-  default: "{{ service_name | title | replace('-', '_') | replace(' ', '_') | lower }}"
+  default: "{{ service_name | replace('-', '_') | replace(' ', '_') | lower }}"
 
 service_kebab:
   type: str
