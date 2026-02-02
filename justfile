@@ -59,7 +59,7 @@ codegen-services:
         -exec bash -c 'SERVICE_DIR="$0"; \
         SERVICE_NAME=$(basename "$SERVICE_DIR"); \
         echo "{{ BOLD }}--- Generating bindings for (opendal-service-${SERVICE_NAME}) ---{{ NORMAL }}"; \
-        cargo run --quiet --manifest-path ${SERVICE_DIR}/Cargo.toml --bin stub_gen_"${SERVICE_NAME}" --features codegen;' {} \;
+        cargo run --quiet --manifest-path ${SERVICE_DIR}/Cargo.toml --bin stub_gen_"${SERVICE_NAME}";' {} \;
 
 # Generate Python type stubs
 [group('dev')]

@@ -15,12 +15,20 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use pyo3_stub_gen::Result;
+use std::env;
+use std::fs;
+use std::path::Path;
 
-fn main() -> Result<()> {
-    pyo3_opendal::codegen::generate_service_stub(
-        "s3",
-        env!("CARGO_PKG_NAME"),
-        _service_s3::stub_info,
-    )
+fn main() -> anyhow::Result<()> {
+    println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=src/config.rs");
+
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
+    let package_path = Path::new(&manifest_dir);
+
+    let code = pyo3_opendal::codegen::service::generate("s3", package_path)?;
+
+    fs::write(package_path.join("src/s3.rs"), code)?;
+
+    Ok(())
 }

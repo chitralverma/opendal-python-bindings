@@ -40,5 +40,5 @@ name = "stub_gen_retry"
 [dependencies]
 opendal-layer-retry = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { workspace = true }
-pyo3-opendal = { workspace = true }
+pyo3-opendal = { workspace = true, features = ["runtime"] }
 pyo3-stub-gen = { workspace = true }

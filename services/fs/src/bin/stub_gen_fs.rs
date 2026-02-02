@@ -20,7 +20,6 @@ use pyo3_stub_gen::Result;
 fn main() -> Result<()> {
     pyo3_opendal::codegen::generate_service_stub(
         "fs",
-        env!("CARGO_MANIFEST_DIR"),
         env!("CARGO_PKG_NAME"),
         _service_fs::stub_info,
     )

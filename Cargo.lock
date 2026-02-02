@@ -1062,6 +1062,7 @@ dependencies = [
 name = "opendal-service-fs"
 version = "0.47.0"
 dependencies = [
+ "anyhow",
  "opendal-service-fs 0.55.0",
  "pyo3",
  "pyo3-async-runtimes",
@@ -1089,6 +1090,7 @@ dependencies = [
 name = "opendal-service-s3"
 version = "0.47.0"
 dependencies = [
+ "anyhow",
  "opendal-service-s3 0.55.0",
  "pyo3",
  "pyo3-async-runtimes",
