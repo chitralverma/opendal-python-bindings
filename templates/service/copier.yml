@@ -32,4 +32,4 @@ service_snake:
 service_kebab:
   type: str
   help: "Name of the service in kebab-case (e.g. fs, s3, hdfs-native)"
-  default: "{{ service_name | title | replace('_', '-') | replace(' ', '-') | lower }}"
+  default: "{{ service_name | replace('_', '-') | replace(' ', '-') | lower }}"
