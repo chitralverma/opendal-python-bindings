@@ -34,9 +34,10 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     let service_config = parse_service_config(&config_path, service_name)?;
 
     let service_pascal = service_to_pascal(service_name);
+    let service_snake = service_name.replace('-', "_");
     let py_service_ident = format_ident!("Py{}Service", service_pascal);
     let config_ident = format_ident!("{}Config", service_pascal);
-    let service_module = format_ident!("opendal_service_{}", service_name);
+    let service_module = format_ident!("opendal_service_{}", service_snake);
     let service_pascal_lit = service_pascal.clone();
 
     // 3. Generate struct fields
