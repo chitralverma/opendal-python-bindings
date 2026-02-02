@@ -74,8 +74,11 @@ def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 2:
+    if len(sys.argv) == 3:
         update_pyproject(sys.argv[1], sys.argv[2])
     else:
-        print("Usage: python scripts/add_service_to_opendal.py <service_name>")
+        print(
+            "Usage: uv run python scripts/add_service_to_opendal.py",
+            "<service_name> <workspace_root>",
+        )
         sys.exit(1)
