@@ -33,13 +33,13 @@ dynamic = [
 readme = "README.md"
 requires-python = ">=3.12"
 
-# [project.optional-dependencies]
-# # Services
-# service-fs = ["opendal-service-fs"]
-# service-s3 = ["opendal-service-s3"]
+[project.optional-dependencies]
+# Services
+service-fs = ["opendal-service-fs"]
+service-s3 = ["opendal-service-s3"]
 
-# # Layers
-# layer-retry = ["opendal-layer-retry"]
+# Layers
+layer-retry = ["opendal-layer-retry"]
 
 [dependency-groups]
 benchmark = [
@@ -51,13 +51,13 @@ benchmark = [
   "pydantic>=2.10.6",
 ]
 
-# [tool.uv.sources]
-# # Services
-# opendal-service-fs = { workspace = true }
-# opendal-service-s3 = { workspace = true }
+[tool.uv.sources]
+# Services
+opendal-service-fs = { workspace = true }
+opendal-service-s3 = { workspace = true }
 
-# # Layers
-# opendal-layer-retry = { workspace = true }
+# Layers
+opendal-layer-retry = { workspace = true }
 
 [tool.maturin]
 module-name = "opendal._core"

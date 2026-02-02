@@ -15,16 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# ruff: noqa: D104
+# ruff: noqa: D104, F403, F405
 
-from opendal_service_s3._service_s3 import (
-    __version__,
-    create_s3_async_operator,
-    create_s3_operator,
-)
+from opendal_service_s3._service_s3 import *
 
-__all__ = [
-    "__version__",
-    "create_s3_operator",
-    "create_s3_async_operator",
-]
+__all__ = ["__version__", "S3"]
