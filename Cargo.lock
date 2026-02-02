@@ -1062,6 +1062,8 @@ dependencies = [
  "pyo3-async-runtimes",
  "pyo3-opendal",
  "pyo3-stub-gen",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 

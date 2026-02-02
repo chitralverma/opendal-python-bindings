@@ -15,41 +15,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[workspace]
-exclude = ["dev"]
-members = ["pyo3-opendal", "opendal", "services/*", "layers/*"]
-resolver = "2"
+[package]
+description = "Apache OpenDAL™ Development Tools"
+name = "odev"
 
-[workspace.package]
 authors = ["Apache OpenDAL <dev@opendal.apache.org>"]
-categories = []
-description = "Apache OpenDAL™ Python Binding (workspace)"
 edition = "2024"
 homepage = "https://opendal.apache.org/"
-keywords = []
 license = "Apache-2.0"
-readme = "README.md"
 repository = "https://github.com/apache/opendal"
 rust-version = "1.85"
-version = "0.47.0"
+version = "0.0.1"
 
-[workspace.dependencies]
-bytes = "1.10.1"
-futures = "0.3"
-jiff = { version = "0.2.15" }
-mea = "0.6"
-opendal-core = { git = "https://github.com/apache/opendal.git", branch = "main" }
-pyo3 = { version = "0.27", features = ["generate-import-lib", "jiff-02"] }
-pyo3-async-runtimes = { version = "0.27", features = ["tokio-runtime"] }
-pyo3-opendal = { path = "pyo3-opendal" }
-pyo3-stub-gen = { version = "0.18" }
-pythonize = "0.27.0"
-serde = { version = "1", default-features = false }
-serde_json = "1"
-tokio = "1"
+[dependencies]
+anyhow = { version = "1.0.95" }
+cargo_metadata = "0.19.1"
+clap = { version = "4.5.23", features = ["derive"] }
+log = { version = "0.4.22" }
+logforth = { version = "0.29.1", features = ["starter-log"] }
+minijinja = { version = "2.5.0" }
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = { version = "1.0.138", features = ["preserve_order"] }
+syn = { version = "2.0.91", features = ["visit", "full", "extra-traits"] }
 
-[profile.release]
-codegen-units = 1
-debug = false
-lto = "fat"
-strip = true
+[dev-dependencies]
+pretty_assertions = "1.4.1"

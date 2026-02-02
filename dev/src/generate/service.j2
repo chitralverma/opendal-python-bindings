@@ -1,0 +1,113 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//   http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+use opendal_service_{{ service }}::{{ service_pascal }}Config;
+
+use pyo3::prelude::*;
+use pyo3::types::PyDict;
+use pyo3_opendal::FromConfigurator;
+use pyo3_opendal::ToStringMap;
+use pyo3_opendal::export::OpendalOperator;
+use pyo3_opendal::ocore::Configurator;
+use pyo3_opendal::ocore::Operator;
+use pyo3_opendal::ocore::OperatorUri;
+use pyo3_stub_gen::derive::*;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[gen_stub_pyclass]
+#[pyclass(get_all, set_all, name = "{{ service_pascal }}Service")]
+#[derive(Clone, Default, Serialize, Deserialize)]
+#[allow(deprecated)]
+pub struct Py{{ service_pascal }}Service {
+{%- for field in config.config %}
+    {%- if field.comments %}
+    {%- for line in field.comments|split('\n') %}
+    /// {{ line }}
+    {%- endfor %}
+    {%- endif %}
+    {%- if field.deprecated %}
+    #[deprecated(since = "{{ field.deprecated.since }}", note = "{{ field.deprecated.note }}")]
+    {%- endif %}
+    pub {{ field.name }}: {{ make_rust_type(field.value, field.is_option) }},
+{%- endfor %}
+}
+
+impl From<Py{{ service_pascal }}Service> for {{ service_pascal }}Config {
+    #[allow(deprecated)]
+    fn from(opts: Py{{ service_pascal }}Service) -> Self {
+        let mut cfg = {{ service_pascal }}Config::default();
+        {%- for field in config.config %}
+        {%- if field.is_option %}
+        cfg.{{ field.name }} = opts.{{ field.name }};
+        {%- else %}
+            {%- if field.value == 'Bool' %}
+        if let Some(v) = opts.{{ field.name }} {
+            cfg.{{ field.name }} = v;
+        }
+            {%- else %}
+        cfg.{{ field.name }} = opts.{{ field.name }};
+            {%- endif %}
+        {%- endif %}
+        {%- endfor %}
+        cfg
+    }
+}
+
+#[gen_stub_pymethods]
+#[pymethods]
+impl Py{{ service_pascal }}Service {
+    #[staticmethod]
+    #[pyo3(signature = (**kwargs))]
+    pub fn from_config(kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
+        let map: HashMap<String, String> =
+            kwargs.map(|d| d.extract()).transpose()?.unwrap_or_default();
+        let cfg = {{ service_pascal }}Config::from_iter(map).map_err(pyo3_opendal::format_pyerr)?;
+
+        Self::from_configurator(&cfg)
+    }
+
+    #[staticmethod]
+    #[pyo3(signature = (uri, **kwargs))]
+    pub fn from_uri(uri: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
+        let map: HashMap<String, String> =
+            kwargs.map(|d| d.extract()).transpose()?.unwrap_or_default();
+
+        let cfg = OperatorUri::new(uri, map)
+            .and_then(|u| {{ service_pascal }}Config::from_uri(&u))
+            .map_err(pyo3_opendal::format_pyerr)?;
+
+        Self::from_configurator(&cfg)
+    }
+
+    #[gen_stub(override_return_type(type_repr = "opendal.AsyncOperator", imports=("opendal")))]
+    pub fn to_async_operator(&self) -> PyResult<OpendalOperator> {
+        let cfg: {{ service_pascal }}Config = self.clone().into();
+        let map = cfg.to_string_map()?;
+        let op = Operator::from_config(cfg)
+            .map_err(pyo3_opendal::format_pyerr)?
+            .finish();
+
+        Ok(OpendalOperator::new(op, map, true))
+    }
+
+    #[gen_stub(override_return_type(type_repr = "opendal.Operator", imports=("opendal")))]
+    pub fn to_operator(&self) -> PyResult<OpendalOperator> {
+        let op = self.to_async_operator()?;
+        Ok(OpendalOperator::new(op.op, op.map, false))
+    }
+}
