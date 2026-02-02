@@ -17,6 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_service_{{ service_name  | replace('-', '_') }}._service_{{ service_name  | replace('-', '_') }} import *
+from opendal_service_{{ service_snake }}._service_{{ service_snake }} import *
 
-__all__ = ["__version__", "{{ service_title }}"]
+__all__ = ["__version__", "{{ service_pascal }}"]

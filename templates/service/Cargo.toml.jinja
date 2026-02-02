@@ -16,7 +16,7 @@
 # under the License.
 
 [package]
-name = "opendal-service-{{ service_name | replace('_', '-') }}"
+name = "opendal-service-{{ service_kebab }}"
 
 authors = { workspace = true }
 description = "Apache OpenDAL™ Python Bindings ({{ service_name }} service)"
@@ -31,14 +31,14 @@ version = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "_service_{{ service_name | replace('-', '_') }}"
+name = "_service_{{ service_snake }}"
 
 [[bin]]
 doc = false
-name = "stub_gen_{{ service_name | replace('-', '_') }}"
+name = "stub_gen_{{ service_snake }}"
 
 [dependencies]
-opendal-service-{{ service_name | replace('_', '-') }} = { git = "https://github.com/apache/opendal.git", branch = "main" }
+opendal-service-{{ service_kebab }} = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { workspace = true }
 pyo3-async-runtimes = { workspace = true }
 pyo3-opendal = { workspace = true, features = ["runtime", "stub-gen"] }

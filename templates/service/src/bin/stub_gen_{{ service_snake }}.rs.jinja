@@ -21,6 +21,6 @@ fn main() -> Result<()> {
     pyo3_opendal::codegen::generate_service_stub(
         "{{ service_name }}",
         env!("CARGO_PKG_NAME"),
-        _service_{{ service_name | replace('-', '_') }}::stub_info,
+        _service_{{ service_snake }}::stub_info,
     )
 }

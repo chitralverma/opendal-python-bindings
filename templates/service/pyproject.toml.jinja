@@ -16,7 +16,7 @@
 # under the License.
 
 [project]
-name = "opendal-service-{{ service_name | replace('_', '-') }}"
+name = "opendal-service-{{ service_kebab }}"
 
 dependencies = ["opendal"]
 dynamic = [
@@ -37,7 +37,7 @@ requires-python = ">=3.12"
 opendal = { workspace = true }
 
 [tool.maturin]
-module-name = "opendal_service_{{ service_name | replace('-', '_') }}._service_{{ service_name | replace('-', '_') }}"
+module-name = "opendal_service_{{ service_snake }}._service_{{ service_snake }}"
 python-source = "python"
 
 [build-system]

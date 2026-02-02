@@ -17,9 +17,19 @@
 
 service_name:
   type: str
-  help: "The name of the service (e.g. fs, s3, memory)"
+  help: "Given name of the service (e.g. fs, s3, memory)"
 
-service_title:
+service_pascal:
   type: str
   help: "The TitleCase name of the service (e.g. Fs, S3, HdfsNative)"
-  default: "{{ service_name | title }}"
+  default: "{{ service_name | title | replace('-', '') | replace('_', '') }}"
+
+service_snake:
+  type: str
+  help: "Name of the service in snake_case (e.g. fs, s3, hdfs_native)"
+  default: "{{ service_name | title | replace('-', '_') | replace(' ', '_') | lower }}"
+
+service_kebab:
+  type: str
+  help: "Name of the service in kebab-case (e.g. fs, s3, hdfs-native)"
+  default: "{{ service_name | title | replace('_', '-') | replace(' ', '-') | lower }}"

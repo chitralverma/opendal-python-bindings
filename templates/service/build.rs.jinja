@@ -29,8 +29,8 @@ fn main() -> anyhow::Result<()> {
     // Generate the code
     let code = pyo3_opendal::codegen::service::generate("{{ service_name }}", package_path)?;
 
-    // Write to src/{{ service_name | replace('-', '_') }}.rs
-    fs::write(package_path.join("src/{{ service_name | replace('-', '_') }}.rs"), code)?;
+    // Write to src/{{ service_snake }}.rs
+    fs::write(package_path.join("src/{{ service_snake }}.rs"), code)?;
 
     Ok(())
 }
