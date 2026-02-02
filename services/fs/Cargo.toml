@@ -36,6 +36,10 @@ name = "_service_fs"
 [[bin]]
 doc = false
 name = "stub_gen_fs"
+required-features = ["codegen"]
+
+[features]
+codegen = ["pyo3-opendal/codegen"]
 
 [dependencies]
 opendal-service-fs = { git = "https://github.com/apache/opendal.git", branch = "main" }

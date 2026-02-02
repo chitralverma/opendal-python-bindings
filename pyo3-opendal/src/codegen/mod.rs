@@ -17,3 +17,27 @@
 
 pub mod parser;
 pub mod service;
+
+use std::path::Path;
+
+pub fn generate_service_stub<F>(
+    service_name: &str,
+    manifest_dir: &str,
+    pkg_name: &str,
+    stub_info_getter: F,
+) -> pyo3_stub_gen::Result<()>
+where
+    F: FnOnce() -> pyo3_stub_gen::Result<pyo3_stub_gen::StubInfo>,
+{
+    // 1. Generate Rust source
+    let package_path = Path::new(manifest_dir);
+    let code = service::generate(service_name, package_path).map_err(|e| anyhow::anyhow!(e))?;
+    std::fs::write(package_path.join(format!("src/{}.rs", service_name)), code)?;
+
+    // 2. Generate Stubs
+    let mut stub = stub_info_getter()?;
+    let pkg_name_clean = pkg_name.replace('-', "_");
+    stub.modules.retain(|k, _| k.starts_with(&pkg_name_clean));
+    stub.generate()?;
+    Ok(())
+}

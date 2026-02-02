@@ -26,11 +26,11 @@ import typing_extensions
 import opendal
 
 __all__ = [
-    "S3Service",
+    "S3",
 ]
 
 @typing.final
-class S3Service:
+class S3:
     @property
     def root(self) -> builtins.str | None:
         r"""
@@ -522,8 +522,8 @@ class S3Service:
     def enable_request_payer(self, value: builtins.bool | None) -> None:
         r"""Indicates whether the client agrees to pay for the requests made to the S3 bucket."""
     @staticmethod
-    def from_config(**kwargs: typing.Any) -> S3Service: ...
+    def from_config(**kwargs: typing.Any) -> S3: ...
     @staticmethod
-    def from_uri(uri: builtins.str, **kwargs: typing.Any) -> S3Service: ...
+    def from_uri(uri: builtins.str, **kwargs: typing.Any) -> S3: ...
     def to_async_operator(self) -> opendal.AsyncOperator: ...
     def to_operator(self) -> opendal.Operator: ...

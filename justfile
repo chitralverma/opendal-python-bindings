@@ -24,7 +24,7 @@ default: help
 
 set ignore-comments := true
 
-workspace_root := `uv --preview-features workspace-dir workspace dir`
+workspace_root := `uv workspace dir --preview-features workspace-dir`
 
 # ==============================================================================
 # Setup & Maintenance
@@ -54,17 +54,17 @@ clean:
 # Generate bindings for all services
 [group('dev')]
 [private]
-generate:
+codegen-services:
     @find "{{ workspace_root }}/services" -maxdepth 1 -mindepth 1 -type d \
         -exec bash -c 'SERVICE_DIR="$0"; \
         SERVICE_NAME=$(basename "$SERVICE_DIR"); \
         echo "{{ BOLD }}--- Generating bindings for (opendal-service-${SERVICE_NAME}) ---{{ NORMAL }}"; \
-        cargo run --quiet --manifest-path {{ workspace_root }}/dev/Cargo.toml -- generate-service --service "${SERVICE_NAME}" --path "${SERVICE_DIR}";' {} \;
+        cargo run --quiet --manifest-path ${SERVICE_DIR}/Cargo.toml --bin stub_gen_"${SERVICE_NAME}" --features codegen;' {} \;
 
 # Generate Python type stubs
 [group('dev')]
 stub-gen: setup
-    @just generate
+    @just codegen-services
     @echo "{{ BOLD }}--- Generating Python type stubs ---{{ NORMAL }}"
     @cargo run --quiet --package opendal-python --bin stub_gen
     @echo "{{ BOLD }}--- Formatting and fixing generated stubs ---{{ NORMAL }}"

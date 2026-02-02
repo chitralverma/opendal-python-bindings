@@ -16,7 +16,7 @@
 # under the License.
 
 [workspace]
-exclude = ["dev"]
+exclude = []
 members = ["pyo3-opendal", "opendal", "services/*", "layers/*"]
 resolver = "2"
 

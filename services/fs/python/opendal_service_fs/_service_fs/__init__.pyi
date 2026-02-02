@@ -24,11 +24,11 @@ import typing
 import opendal
 
 __all__ = [
-    "FsService",
+    "Fs",
 ]
 
 @typing.final
-class FsService:
+class Fs:
     @property
     def root(self) -> builtins.str | None:
         r"""Root dir for backend."""
@@ -42,8 +42,8 @@ class FsService:
     def atomic_write_dir(self, value: builtins.str | None) -> None:
         r"""Tmp dir for atomic write."""
     @staticmethod
-    def from_config(**kwargs: typing.Any) -> FsService: ...
+    def from_config(**kwargs: typing.Any) -> Fs: ...
     @staticmethod
-    def from_uri(uri: builtins.str, **kwargs: typing.Any) -> FsService: ...
+    def from_uri(uri: builtins.str, **kwargs: typing.Any) -> Fs: ...
     def to_async_operator(self) -> opendal.AsyncOperator: ...
     def to_operator(self) -> opendal.Operator: ...

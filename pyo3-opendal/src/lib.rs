@@ -38,6 +38,8 @@ mod errors;
 pub use errors::*;
 mod options;
 pub use options::*;
+#[cfg(feature = "codegen")]
+pub mod codegen;
 pub mod export;
 pub mod ffi;
 use pyo3_stub_gen::derive::*;

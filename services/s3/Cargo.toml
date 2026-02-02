@@ -36,6 +36,10 @@ name = "_service_s3"
 [[bin]]
 doc = false
 name = "stub_gen_s3"
+required-features = ["codegen"]
+
+[features]
+codegen = ["pyo3-opendal/codegen"]
 
 [dependencies]
 opendal-service-s3 = { git = "https://github.com/apache/opendal.git", branch = "main" }

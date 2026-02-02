@@ -34,17 +34,37 @@ version = { workspace = true }
 [lib]
 crate-type = ["rlib"]
 
+[features]
+codegen = [
+  "dep:anyhow",
+  "dep:cargo_metadata",
+  "dep:log",
+  "dep:proc-macro2",
+  "dep:quote",
+  "dep:syn",
+]
+
 [dependencies]
+anyhow = { version = "1.0.95", optional = true }
 bytes = { workspace = true }
+cargo_metadata = { version = "0.19.1", optional = true }
 futures = { workspace = true }
 jiff = { workspace = true }
+log = { version = "0.4.22", optional = true }
 mea = { workspace = true }
 opendal-core = { workspace = true, features = ["blocking"] }
 pin-project = "1"
+proc-macro2 = { version = "1.0.92", optional = true }
 pyo3 = { workspace = true }
 pyo3-async-runtimes = { workspace = true }
 pyo3-stub-gen = { workspace = true }
 pythonize = { workspace = true }
+quote = { version = "1.0.37", optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+syn = { version = "2.0.91", features = [
+  "visit",
+  "full",
+  "extra-traits",
+], optional = true }
 tokio = { workspace = true }
