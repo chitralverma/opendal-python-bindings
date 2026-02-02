@@ -21,7 +21,6 @@ use std::path::Path;
 
 fn main() -> anyhow::Result<()> {
     println!("cargo:rerun-if-changed=Cargo.toml");
-    println!("cargo:rerun-if-changed=src/config.rs");
 
     let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
     let package_path = Path::new(&manifest_dir);
