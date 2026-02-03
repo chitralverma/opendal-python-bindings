@@ -152,8 +152,7 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
         impl #py_service_ident {
             #[new]
             #[pyo3(signature = (*, **kwargs))]
-            fn new(kwargs: Option<&Bound<PyDict>>
-            ) -> PyResult<Self> {
+            fn new(kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
                 Self::from_config(kwargs)
             }
 
