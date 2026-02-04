@@ -15,6 +15,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::codegen::types::get_type_info_from_str;
 use crate::codegen::utils::{find_dependency_path, to_pascal};
 use anyhow::{Result, anyhow};
 use quote::{format_ident, quote};
@@ -77,15 +78,16 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
         let arg_name = format_ident!("{}", new_method.arg_name);
         let arg_type_str = new_method.arg_type.as_str();
 
-        let (py_type, _, _, py_type_doc) = map_type(arg_type_str, &new_method.name);
-        // Factory args are required in python new(), unless we decide to make them optional
-        // But for `ConcurrentLimitLayer::new(permits)`, permits is required.
-        // Let's make it consistent: if it's in `new()`, expose it as a required argument in Python.
+        let type_info = get_type_info_from_str(arg_type_str);
+
+        let py_type = type_info.rust_type;
+        let py_type_doc = type_info.py_type_doc;
 
         // Generate docstring entry
         let doc_desc = process_docs(&new_method.docs, &new_method.name);
         doc_params.push(format!(
-            "{} : {}\n    {}",
+            "{} : {}
+    {}",
             new_method.arg_name, py_type_doc, doc_desc
         ));
 
@@ -107,8 +109,18 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
         let arg_type_str = method.arg_type.as_str();
 
         // Type mapping and filtering. Only support types that map easily to Python.
-        let (py_type, default_val, is_bool, py_type_doc) = map_type(arg_type_str, &method.name);
+        let type_info = get_type_info_from_str(arg_type_str);
+
+        let py_type = type_info.rust_type;
+        let default_val = type_info.default_val;
+        let is_bool = type_info.is_bool;
+        let py_type_doc = type_info.py_type_doc;
+
         if py_type_doc.is_empty() {
+            eprintln!(
+                "Skipping method {} due to unsupported type {}",
+                method.name, arg_type_str
+            );
             continue;
         } // Skipped type
 
@@ -116,7 +128,8 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
         let doc_desc = process_docs(&method.docs, &method.name);
 
         doc_params.push(format!(
-            "{} : Optional[{}]\n    {}",
+            "{} : {}, optional
+    {}",
             method.arg_name, py_type_doc, doc_desc
         ));
 
@@ -204,43 +217,6 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
     };
 
     Ok(code.to_string())
-}
-
-fn map_type(
-    arg_type_str: &str,
-    method_name: &str,
-) -> (
-    proc_macro2::TokenStream,
-    proc_macro2::TokenStream,
-    bool,
-    String,
-) {
-    match arg_type_str {
-        "bool" => (quote!(bool), quote!(false), true, "bool".to_string()),
-        "String" => (quote!(String), quote!(None), false, "str".to_string()),
-        "usize" | "u64" | "i64" | "u32" | "u16" | "isize" | "i32" | "i16" | "i8" | "u8" => {
-            let t = format_ident!("{}", arg_type_str);
-            (quote!(#t), quote!(None), false, "int".to_string())
-        }
-        "f32" | "f64" => {
-            let t = format_ident!("{}", arg_type_str);
-            (quote!(#t), quote!(None), false, "float".to_string())
-        }
-        "Duration" => (
-            quote!(std::time::Duration),
-            quote!(None),
-            false,
-            "float".to_string(),
-        ),
-        _ => {
-            // Skip unsupported types
-            eprintln!(
-                "Skipping method {} due to unsupported type {}",
-                method_name, arg_type_str
-            );
-            (quote!(), quote!(), false, "".to_string())
-        }
-    }
 }
 
 fn process_docs(docs: &[String], method_name: &str) -> String {

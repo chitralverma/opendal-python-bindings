@@ -16,6 +16,7 @@
 // under the License.
 
 use crate::codegen::parser::{ConfigType, parse_service_config};
+use crate::codegen::types::get_type_info_from_config_type;
 use crate::codegen::utils::{find_dependency_path, to_pascal};
 use anyhow::{Result, anyhow};
 use quote::{format_ident, quote};
@@ -54,16 +55,8 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
         let field_name = format_ident!("{}", field.name);
 
         // Handle types
-        let (ty, _) = match field.value {
-            ConfigType::Bool => (quote!(bool), false),
-            ConfigType::String | ConfigType::Duration => (quote!(String), false),
-            ConfigType::Usize => (quote!(usize), false),
-            ConfigType::U64 => (quote!(u64), false),
-            ConfigType::I64 => (quote!(i64), false),
-            ConfigType::U32 => (quote!(u32), false),
-            ConfigType::U16 => (quote!(u16), false),
-            ConfigType::Vec => (quote!(Vec<String>), false),
-        };
+        let type_info = get_type_info_from_config_type(field.value);
+        let ty = type_info.rust_type;
 
         // Determine if we wrap in Option
         // Logic: if it's already an option upstream (field.is_option) OR it's a bool (which we treat as optional in python)
