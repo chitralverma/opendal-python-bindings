@@ -58,53 +58,61 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
     let mut signature_args = Vec::new();
     let mut doc_params = Vec::new();
 
-    // Sort methods by arg_name to ensure deterministic order
-    let mut methods = layer_def.methods;
-    methods.sort_by(|a, b| a.arg_name.cmp(&b.arg_name));
+    let methods = layer_def.methods;
+    // Separate factory methods (e.g. `new`) from builder methods (e.g. `with_xxx`)
+    let (factory_methods, mut builder_methods): (Vec<_>, Vec<_>) =
+        methods.into_iter().partition(|m| m.is_factory);
 
-    for method in methods {
+    // Sort builder methods by arg_name to ensure deterministic order
+    builder_methods.sort_by(|a, b| a.arg_name.cmp(&b.arg_name));
+
+    // Handle factory method arguments
+    // We prioritize `new` if it exists, otherwise assume Default::default()
+    let mut factory_call = quote! { let mut layer = #layer_struct_ident::default(); };
+    let mut factory_arg_names = std::collections::HashSet::new();
+
+    if let Some(new_method) = factory_methods.iter().find(|m| m.name == "new") {
+        let method_name = format_ident!("{}", new_method.name);
+        let arg_name = format_ident!("{}", new_method.arg_name);
+        let arg_type_str = new_method.arg_type.as_str();
+
+        let (py_type, _, _, py_type_doc) = map_type(arg_type_str, &new_method.name);
+        // Factory args are required in python new(), unless we decide to make them optional
+        // But for `ConcurrentLimitLayer::new(permits)`, permits is required.
+        // Let's make it consistent: if it's in `new()`, expose it as a required argument in Python.
+
+        // Generate docstring entry
+        let doc_desc = process_docs(&new_method.docs, &new_method.name);
+        doc_params.push(format!(
+            "{} : {}\n    {}",
+            new_method.arg_name, py_type_doc, doc_desc
+        ));
+
+        new_args.push(quote! { #arg_name: #py_type });
+        signature_args.push(quote! { #arg_name }); // Required arg, no default value
+
+        factory_call = quote! { let mut layer = #layer_struct_ident::#method_name(#arg_name); };
+        factory_arg_names.insert(new_method.arg_name.clone());
+    }
+
+    for method in builder_methods {
+        // Skip if this arg was already handled by factory method
+        if factory_arg_names.contains(&method.arg_name) {
+            continue;
+        }
+
         let method_name = format_ident!("{}", method.name);
         let arg_name = format_ident!("{}", method.arg_name);
         let arg_type_str = method.arg_type.as_str();
 
         // Type mapping and filtering. Only support types that map easily to Python.
-        let (py_type, default_val, is_bool, py_type_doc) = match arg_type_str {
-            "bool" => (quote!(bool), quote!(false), true, "bool"),
-            "String" => (quote!(String), quote!(None), false, "str"),
-            "usize" | "u64" | "i64" | "u32" | "u16" | "isize" | "i32" | "i16" | "i8" | "u8" => {
-                let t = format_ident!("{}", arg_type_str);
-                (quote!(#t), quote!(None), false, "int")
-            }
-            "f32" | "f64" => {
-                let t = format_ident!("{}", arg_type_str);
-                (quote!(#t), quote!(None), false, "float")
-            }
-            "Duration" => (quote!(std::time::Duration), quote!(None), false, "float"),
-            _ => {
-                // Skip unsupported types
-                eprintln!(
-                    "Skipping method {} due to unsupported type {}",
-                    method.name, arg_type_str
-                );
-                continue;
-            }
-        };
+        let (py_type, default_val, is_bool, py_type_doc) = map_type(arg_type_str, &method.name);
+        if py_type_doc.is_empty() {
+            continue;
+        } // Skipped type
 
         // Generate docstring entry
-        let doc_desc = if method.docs.is_empty() {
-            format!("See `{}`.", method.name)
-        } else {
-            // Join lines, trimming and adding indentation.
-            // If a line starts with `#`, treat it as a header and ensure it starts on a new line.
-            let mut lines = Vec::new();
-            for s in method.docs.iter() {
-                let trimmed = s.trim();
-                if !trimmed.is_empty() {
-                    lines.push(trimmed.to_string());
-                }
-            }
-            lines.join("\n    ")
-        };
+        let doc_desc = process_docs(&method.docs, &method.name);
 
         doc_params.push(format!(
             "{} : Optional[{}]\n    {}",
@@ -185,7 +193,7 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
             #[pyo3(signature = (#(#signature_args),*))]
             #[allow(unused)]
             fn new(#(#new_args),*) -> PyResult<PyClassInitializer<Self>> {
-                let mut layer = #layer_struct_ident::default();
+                #factory_call
                 #(#new_assignments)*
 
                 let class = PyClassInitializer::from(opyo3::PyLayer::new()?).add_subclass(Self(layer));
@@ -197,6 +205,60 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
     Ok(code.to_string())
 }
 
+fn map_type(
+    arg_type_str: &str,
+    method_name: &str,
+) -> (
+    proc_macro2::TokenStream,
+    proc_macro2::TokenStream,
+    bool,
+    String,
+) {
+    match arg_type_str {
+        "bool" => (quote!(bool), quote!(false), true, "bool".to_string()),
+        "String" => (quote!(String), quote!(None), false, "str".to_string()),
+        "usize" | "u64" | "i64" | "u32" | "u16" | "isize" | "i32" | "i16" | "i8" | "u8" => {
+            let t = format_ident!("{}", arg_type_str);
+            (quote!(#t), quote!(None), false, "int".to_string())
+        }
+        "f32" | "f64" => {
+            let t = format_ident!("{}", arg_type_str);
+            (quote!(#t), quote!(None), false, "float".to_string())
+        }
+        "Duration" => (
+            quote!(std::time::Duration),
+            quote!(None),
+            false,
+            "float".to_string(),
+        ),
+        _ => {
+            // Skip unsupported types
+            eprintln!(
+                "Skipping method {} due to unsupported type {}",
+                method_name, arg_type_str
+            );
+            (quote!(), quote!(), false, "".to_string())
+        }
+    }
+}
+
+fn process_docs(docs: &[String], method_name: &str) -> String {
+    if docs.is_empty() {
+        format!("See `{}`.", method_name)
+    } else {
+        // Join lines, trimming and adding indentation.
+        // If a line starts with `#`, treat it as a header and ensure it starts on a new line.
+        let mut lines = Vec::new();
+        for s in docs.iter() {
+            let trimmed = s.trim();
+            if !trimmed.is_empty() {
+                lines.push(trimmed.to_string());
+            }
+        }
+        lines.join("\n    ")
+    }
+}
+
 #[derive(Default, Clone, Debug)]
 struct MethodDef {
     name: String,
@@ -204,6 +266,7 @@ struct MethodDef {
     arg_type: String,
     docs: Vec<String>,
     is_toggle: bool,
+    is_factory: bool,
 }
 
 #[derive(Default, Clone, Debug)]
@@ -232,13 +295,16 @@ fn parse_layer_def(path: &Path, layer_name: &str) -> Result<LayerDef> {
                                 let vis = method.vis;
                                 if matches!(vis, Visibility::Public(_)) {
                                     let sig = method.sig;
-                                    // We are looking for builder methods: `pub fn name(mut self, arg: Type) -> Self`
+                                    let is_new = sig.ident == "new";
+
                                     // Check receiver
                                     let has_receiver = sig
                                         .inputs
                                         .iter()
                                         .any(|arg| matches!(arg, syn::FnArg::Receiver(_)));
-                                    if !has_receiver {
+
+                                    if !has_receiver && !is_new {
+                                        // Skip static methods that are not `new`
                                         continue;
                                     }
 
@@ -258,9 +324,25 @@ fn parse_layer_def(path: &Path, layer_name: &str) -> Result<LayerDef> {
                                         _ => continue,
                                     }
 
-                                    // Check args: should have 1 arg besides self
-                                    // (or more, but usually builder is 1)
-                                    // Also allow 0 args (toggle-like: with_jitter(mut self) -> Self)
+                                    // Extract docs
+                                    let docs: Vec<String> = method
+                                        .attrs
+                                        .iter()
+                                        .filter(|attr| attr.path().is_ident("doc"))
+                                        .filter_map(|attr| {
+                                            if let Meta::NameValue(meta) = &attr.meta {
+                                                if let Expr::Lit(ExprLit {
+                                                    lit: Lit::Str(s), ..
+                                                }) = &meta.value
+                                                {
+                                                    return Some(s.value().trim().to_string());
+                                                }
+                                            }
+                                            None
+                                        })
+                                        .collect();
+
+                                    // Check args:
                                     let args: Vec<_> = sig
                                         .inputs
                                         .iter()
@@ -292,59 +374,27 @@ fn parse_layer_def(path: &Path, layer_name: &str) -> Result<LayerDef> {
                                             "unknown".to_string()
                                         };
 
-                                        // Extract docs
-                                        let docs: Vec<String> = method
-                                            .attrs
-                                            .iter()
-                                            .filter(|attr| attr.path().is_ident("doc"))
-                                            .filter_map(|attr| {
-                                                if let Meta::NameValue(meta) = &attr.meta {
-                                                    if let Expr::Lit(ExprLit {
-                                                        lit: Lit::Str(s),
-                                                        ..
-                                                    }) = &meta.value
-                                                    {
-                                                        return Some(s.value().trim().to_string());
-                                                    }
-                                                }
-                                                None
-                                            })
-                                            .collect();
-
                                         methods.push(MethodDef {
                                             name: sig.ident.to_string(),
                                             arg_name,
                                             arg_type,
                                             docs,
                                             is_toggle: false,
+                                            is_factory: is_new,
                                         });
                                     } else if args.is_empty() {
+                                        if is_new {
+                                            // new() with no args -> implies default() basically
+                                            // We can track it as a factory but with no args?
+                                            // Current logic handles Default::default() as fallback.
+                                            continue;
+                                        }
+
                                         // Handle toggle methods (e.g. with_jitter)
                                         let name = sig.ident.to_string();
                                         if name.starts_with("with_") {
                                             let arg_name =
                                                 name.strip_prefix("with_").unwrap().to_string();
-
-                                            // Extract docs
-                                            let docs: Vec<String> = method
-                                                .attrs
-                                                .iter()
-                                                .filter(|attr| attr.path().is_ident("doc"))
-                                                .filter_map(|attr| {
-                                                    if let Meta::NameValue(meta) = &attr.meta {
-                                                        if let Expr::Lit(ExprLit {
-                                                            lit: Lit::Str(s),
-                                                            ..
-                                                        }) = &meta.value
-                                                        {
-                                                            return Some(
-                                                                s.value().trim().to_string(),
-                                                            );
-                                                        }
-                                                    }
-                                                    None
-                                                })
-                                                .collect();
 
                                             methods.push(MethodDef {
                                                 name,
@@ -352,6 +402,7 @@ fn parse_layer_def(path: &Path, layer_name: &str) -> Result<LayerDef> {
                                                 arg_type: "bool".to_string(),
                                                 docs,
                                                 is_toggle: true,
+                                                is_factory: false,
                                             });
                                         }
                                     }

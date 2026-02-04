@@ -18,6 +18,9 @@
 import os
 from uuid import uuid4
 
+import opendal_layer_concurrent_limit
+import opendal_layer_mime_guess
+import opendal_layer_retry
 import pytest
 from dotenv import load_dotenv
 
@@ -61,9 +64,9 @@ def setup_config(service_name):
 def async_operator(service_name, setup_config):
     return (
         opendal.AsyncOperator(service_name, **setup_config)
-        .layer(opendal.layers.RetryLayer())
-        .layer(opendal.layers.ConcurrentLimitLayer(1024))
-        .layer(opendal.layers.MimeGuessLayer())
+        .layer(opendal_layer_retry.RetryLayer())
+        .layer(opendal_layer_concurrent_limit.ConcurrentLimitLayer(1024))
+        .layer(opendal_layer_mime_guess.MimeGuessLayer())
     )
 
 

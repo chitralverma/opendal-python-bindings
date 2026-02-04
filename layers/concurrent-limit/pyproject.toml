@@ -16,9 +16,9 @@
 # under the License.
 
 [project]
-name = "opendal"
+name = "opendal-layer-concurrent-limit"
 
-dependencies = []
+dependencies = ["opendal"]
 dynamic = [
   "version",
   "description",
@@ -33,32 +33,11 @@ dynamic = [
 readme = "README.md"
 requires-python = ">=3.12"
 
-[project.optional-dependencies]
-layer-concurrent-limit = ["opendal-layer-concurrent-limit"]
-layer-mime-guess = ["opendal-layer-mime-guess"]
-layer-retry = ["opendal-layer-retry"]
-service-fs = ["opendal-service-fs"]
-service-s3 = ["opendal-service-s3"]
-
-[dependency-groups]
-benchmark = [
-  "boto3>=1.37.9",
-  "boto3-stubs[essential]>=1.37.9",
-  "gevent>=24.11.1",
-  "greenify>=0.4.3",
-  "greenlet>=3.1.1",
-  "pydantic>=2.10.6",
-]
-
 [tool.uv.sources]
-opendal-layer-concurrent-limit = { workspace = true }
-opendal-layer-mime-guess = { workspace = true }
-opendal-layer-retry = { workspace = true }
-opendal-service-fs = { workspace = true }
-opendal-service-s3 = { workspace = true }
+opendal = { workspace = true }
 
 [tool.maturin]
-module-name = "opendal._core"
+module-name = "opendal_layer_concurrent_limit._layer_concurrent_limit"
 python-source = "python"
 
 [build-system]
