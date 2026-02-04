@@ -44,21 +44,21 @@ class RetryLayer:
         Parameters
         ----------
         factor : Optional[float]
-            Set factor of current backoff.
-            # Panics
-            This function will panic if input factor smaller than `1.0`.
+           Set factor of current backoff.
+           # Panics
+           This function will panic if input factor smaller than `1.0`.
         jitter : Optional[bool]
-            Set jitter of current backoff.
-            If jitter is enabled, ExponentialBackoff will add a random jitter in `[0, min_delay)
-            to current delay.
+           Set jitter of current backoff.
+           If jitter is enabled, ExponentialBackoff will add a random jitter in `[0, min_delay)
+           to current delay.
         max_delay : Optional[float]
-            Set max_delay of current backoff.
-            Delay will not increase if current delay is larger than max_delay.
+           Set max_delay of current backoff.
+           Delay will not increase if current delay is larger than max_delay.
         max_times : Optional[int]
-            Set max_times of current backoff.
-            Backoff will return `None` if max times is reaching.
+           Set max_times of current backoff.
+           Backoff will return `None` if max times is reaching.
         min_delay : Optional[float]
-            Set min_delay of current backoff.
+           Set min_delay of current backoff.
 
         Returns
         -------

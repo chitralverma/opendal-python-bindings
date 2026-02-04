@@ -29,6 +29,7 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     if !config_path.exists() {
         return Err(anyhow!("Config file not found at {:?}", config_path));
     }
+    println!("cargo:rerun-if-changed={}", config_path.display());
 
     // 2. Parse config
     let mut service_config = parse_service_config(&config_path, service_name)?;
