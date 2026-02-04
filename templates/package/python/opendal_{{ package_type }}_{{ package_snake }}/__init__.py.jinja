@@ -18,7 +18,6 @@
 # ruff: noqa: D104, F403, F405
 
 from opendal_{{ package_type }}_{{ package_snake }}._{{ package_type }}_{{ package_snake }} import *  # pyright:ignore
-
 {% if package_type == 'service' %}
 __all__ = ["__version__", "{{ package_pascal }}"]  # pyright:ignore
 {% else %}

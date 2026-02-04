@@ -19,5 +19,4 @@
 
 from opendal_layer_mime_guess._layer_mime_guess import *  # pyright:ignore
 
-
 __all__ = ["__version__", "MimeGuessLayer"]  # pyright:ignore

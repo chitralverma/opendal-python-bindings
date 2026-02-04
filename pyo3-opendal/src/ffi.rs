@@ -47,11 +47,10 @@ pub fn to_layer_capsule(py: Python, layer: Box<dyn PythonLayer>) -> PyResult<Bou
 }
 
 /// Import a [`Box<dyn PythonLayer>`] from a PyCapsule.
-pub fn from_layer_capsule<'a>(
-    capsule: &'a Bound<'a, PyCapsule>,
-) -> PyResult<&'a Box<dyn PythonLayer>> {
+pub fn from_layer_capsule<'a>(capsule: &'a Bound<'a, PyCapsule>) -> PyResult<&'a dyn PythonLayer> {
     let ptr = capsule
         .pointer_checked(Some(OPENDAL_LAYER_CAPSULE_NAME))?
-        .cast();
-    Ok(unsafe { ptr.as_ref() })
+        .cast::<Box<dyn PythonLayer>>();
+    let boxed = unsafe { ptr.as_ref() };
+    Ok(boxed.as_ref())
 }

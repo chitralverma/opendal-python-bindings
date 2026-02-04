@@ -19,5 +19,4 @@
 
 from opendal_service_s3._service_s3 import *  # pyright:ignore
 
-
 __all__ = ["__version__", "S3"]  # pyright:ignore
