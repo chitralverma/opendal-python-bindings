@@ -19,7 +19,9 @@
 // We will use `opyo3::Xxx` to represents all types from pyo3-opendal.
 use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
+
 use pyo3::types::PyDict;
+
 use pyo3_stub_gen::define_stub_info_gatherer;
 
 #[allow(deprecated)]
@@ -47,6 +49,7 @@ define_build_operator!();
 #[pymodule(gil_used = false)]
 fn _service_s3(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     opyo3::check_debug_build!(py, env!("CARGO_PKG_NAME"))?;
+
     init();
 
     // Add version

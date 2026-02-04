@@ -19,4 +19,5 @@
 
 from opendal_service_fs._service_fs import *  # pyright:ignore
 
+
 __all__ = ["__version__", "Fs"]  # pyright:ignore
