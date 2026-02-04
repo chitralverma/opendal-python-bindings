@@ -16,14 +16,15 @@
 // under the License.
 
 use crate::codegen::parser::{ConfigType, parse_service_config};
+use crate::codegen::utils::{find_dependency_path, to_pascal};
 use anyhow::{Result, anyhow};
-use cargo_metadata::MetadataCommand;
 use quote::{format_ident, quote};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     // 1. Find dependency path
-    let dep_path = find_dependency_path(package_path, service_name)?;
+    let dep_name = format!("opendal-service-{}", service_name);
+    let dep_path = find_dependency_path(package_path, &dep_name)?;
     let config_path = dep_path.join("src/config.rs");
 
     if !config_path.exists() {
@@ -36,7 +37,7 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     // Sort config fields by name to ensure deterministic order
     service_config.config.sort_by(|a, b| a.name.cmp(&b.name));
 
-    let service_pascal = service_to_pascal(service_name);
+    let service_pascal = to_pascal(service_name);
     let service_snake = service_name.replace('-', "_");
     let py_service_ident = format_ident!("Py{}Service", service_pascal);
     let config_ident = format_ident!("{}Config", service_pascal);
@@ -196,41 +197,4 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     };
 
     Ok(code.to_string())
-}
-
-fn find_dependency_path(package_path: &Path, service_name: &str) -> Result<PathBuf> {
-    let manifest_path = package_path.join("Cargo.toml").canonicalize()?;
-
-    let metadata = MetadataCommand::new()
-        .manifest_path(&manifest_path)
-        .exec()?;
-
-    let dep_name = format!("opendal-service-{}", service_name);
-
-    let pkg = metadata
-        .packages
-        .iter()
-        .find(|p| p.name == dep_name && p.source.is_some())
-        .ok_or_else(|| anyhow!("Could not find dependency package {}", dep_name))?;
-
-    let dep_manifest_path = pkg.manifest_path.clone().into_std_path_buf();
-    Ok(dep_manifest_path.parent().unwrap().to_path_buf())
-}
-
-fn service_to_pascal(service: &str) -> String {
-    let mut result = String::with_capacity(service.len());
-    let mut capitalize = true;
-
-    for &b in service.as_bytes() {
-        if b == b'_' || b == b'-' {
-            capitalize = true;
-        } else if capitalize {
-            result.push((b as char).to_ascii_uppercase());
-            capitalize = false;
-        } else {
-            result.push(b as char);
-        }
-    }
-
-    result
 }

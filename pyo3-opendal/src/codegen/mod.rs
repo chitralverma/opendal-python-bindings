@@ -21,6 +21,8 @@ pub mod layer;
 pub mod parser;
 #[cfg(feature = "codegen")]
 pub mod service;
+#[cfg(feature = "codegen")]
+pub mod utils;
 
 #[cfg(feature = "stub-gen")]
 pub fn generate_service_stub<F>(

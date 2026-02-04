@@ -15,18 +15,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
+use crate::codegen::utils::{find_dependency_path, to_pascal};
 use anyhow::{Result, anyhow};
-use cargo_metadata::MetadataCommand;
 use quote::{format_ident, quote};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use syn::{
     Expr, ExprLit, ImplItem, Item, Lit, Meta, ReturnType, Type, TypePath, Visibility, parse_file,
 };
 
 pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
     // 1. Find dependency path
-    let dep_path = find_dependency_path(package_path, layer_name)?;
+    let dep_name = format!("opendal-layer-{}", layer_name);
+    let dep_path = find_dependency_path(package_path, &dep_name)?;
     let src_path = dep_path.join(format!("src/{}.rs", layer_name.replace('-', "_")));
 
     // Fallback to lib.rs if specific file doesn't exist
@@ -45,7 +46,7 @@ pub fn generate(layer_name: &str, package_path: &Path) -> Result<String> {
     // 2. Parse layer struct and methods
     let layer_def = parse_layer_def(&src_path, layer_name)?;
 
-    let layer_pascal = layer_to_pascal(layer_name);
+    let layer_pascal = to_pascal(layer_name);
     let layer_snake = layer_name.replace('-', "_");
     let py_layer_ident = format_ident!("Py{}Layer", layer_pascal);
     let layer_struct_ident = format_ident!("{}Layer", layer_pascal);
@@ -278,7 +279,7 @@ fn parse_layer_def(path: &Path, layer_name: &str) -> Result<LayerDef> {
     let content = fs::read_to_string(path)?;
     let ast = parse_file(&content)?;
 
-    let layer_pascal = layer_to_pascal(layer_name);
+    let layer_pascal = to_pascal(layer_name);
     let struct_name = format!("{}Layer", layer_pascal);
 
     let mut methods = Vec::new();
@@ -416,41 +417,4 @@ fn parse_layer_def(path: &Path, layer_name: &str) -> Result<LayerDef> {
     }
 
     Ok(LayerDef { methods })
-}
-
-fn find_dependency_path(package_path: &Path, layer_name: &str) -> Result<PathBuf> {
-    let manifest_path = package_path.join("Cargo.toml").canonicalize()?;
-
-    let metadata = MetadataCommand::new()
-        .manifest_path(&manifest_path)
-        .exec()?;
-
-    let dep_name = format!("opendal-layer-{}", layer_name);
-
-    let pkg = metadata
-        .packages
-        .iter()
-        .find(|p| p.name == dep_name && p.source.is_some())
-        .ok_or_else(|| anyhow!("Could not find dependency package {}", dep_name))?;
-
-    let dep_manifest_path = pkg.manifest_path.clone().into_std_path_buf();
-    Ok(dep_manifest_path.parent().unwrap().to_path_buf())
-}
-
-fn layer_to_pascal(layer: &str) -> String {
-    let mut result = String::with_capacity(layer.len());
-    let mut capitalize = true;
-
-    for &b in layer.as_bytes() {
-        if b == b'_' || b == b'-' {
-            capitalize = true;
-        } else if capitalize {
-            result.push((b as char).to_ascii_uppercase());
-            capitalize = false;
-        } else {
-            result.push(b as char);
-        }
-    }
-
-    result
 }
