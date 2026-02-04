@@ -16,6 +16,8 @@
 // under the License.
 
 #[cfg(feature = "codegen")]
+pub mod layer;
+#[cfg(feature = "codegen")]
 pub mod parser;
 #[cfg(feature = "codegen")]
 pub mod service;
@@ -23,6 +25,24 @@ pub mod service;
 #[cfg(feature = "stub-gen")]
 pub fn generate_service_stub<F>(
     _service_name: &str,
+    pkg_name: &str,
+    stub_info_getter: F,
+) -> pyo3_stub_gen::Result<()>
+where
+    F: FnOnce() -> pyo3_stub_gen::Result<pyo3_stub_gen::StubInfo>,
+{
+    // Generate Stubs
+    let mut stub = stub_info_getter()?;
+    let pkg_name_clean = pkg_name.replace('-', "_");
+    stub.modules
+        .retain(|k: &String, _| k.starts_with(&pkg_name_clean));
+    stub.generate()?;
+    Ok(())
+}
+
+#[cfg(feature = "stub-gen")]
+pub fn generate_layer_stub<F>(
+    _layer_name: &str,
     pkg_name: &str,
     stub_info_getter: F,
 ) -> pyo3_stub_gen::Result<()>

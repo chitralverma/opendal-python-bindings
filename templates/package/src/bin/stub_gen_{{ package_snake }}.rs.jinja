@@ -15,21 +15,12 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use std::env;
-use std::fs;
-use std::path::Path;
+use pyo3_stub_gen::Result;
 
-fn main() -> anyhow::Result<()> {
-    println!("cargo:rerun-if-changed=Cargo.toml");
-
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
-    let package_path = Path::new(&manifest_dir);
-
-    // Generate the code
-    let code = pyo3_opendal::codegen::service::generate("{{ service_name }}", package_path)?;
-
-    // Write to src/{{ service_snake }}.rs
-    fs::write(package_path.join("src/{{ service_snake }}.rs"), code)?;
-
-    Ok(())
+fn main() -> Result<()> {
+    pyo3_opendal::codegen::generate_{{ package_type }}_stub(
+        "{{ package_name }}",
+        env!("CARGO_PKG_NAME"),
+        _{{ package_type }}_{{ package_snake }}::stub_info,
+    )
 }

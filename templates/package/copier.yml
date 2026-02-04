@@ -15,31 +15,28 @@
 # specific language governing permissions and limitations
 # under the License.
 
-[project]
-name = "opendal-service-{{ service_kebab }}"
+package_type:
+    type: str
+    help: "Type of the package (service or layer)"
+    choices:
+        - service
+        - layer
 
-dependencies = ["opendal"]
-dynamic = [
-  "version",
-  "description",
-  "keywords",
-  "license",
-  "summary",
-  "home_page",
-  "author",
-  "author_email",
-  "project_url",
-]
-readme = "README.md"
-requires-python = ">=3.12"
+package_name:
+  type: str
+  help: "Given name of the package (e.g. fs, s3, retry)"
 
-[tool.uv.sources]
-opendal = { workspace = true }
+package_pascal:
+  type: str
+  help: "The TitleCase name of the package (e.g. Fs, S3, Retry)"
+  default: "{{ package_name | title | replace('-', '') | replace('_', '') }}"
 
-[tool.maturin]
-module-name = "opendal_service_{{ service_snake }}._service_{{ service_snake }}"
-python-source = "python"
+package_snake:
+  type: str
+  help: "Name of the package in snake_case (e.g. fs, s3, retry)"
+  default: "{{ package_name | replace('-', '_') | replace(' ', '_') | lower }}"
 
-[build-system]
-build-backend = "maturin"
-requires = ["maturin>=1.9.4,<2.0"]
+package_kebab:
+  type: str
+  help: "Name of the package in kebab-case (e.g. fs, s3, retry)"
+  default: "{{ package_name | replace('_', '-') | replace(' ', '-') | lower }}"

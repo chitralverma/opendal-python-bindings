@@ -15,21 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-service_name:
-  type: str
-  help: "Given name of the service (e.g. fs, s3, memory)"
+# ruff: noqa: D104, F403, F405
 
-service_pascal:
-  type: str
-  help: "The TitleCase name of the service (e.g. Fs, S3, HdfsNative)"
-  default: "{{ service_name | title | replace('-', '') | replace('_', '') }}"
+from opendal_{{ package_type }}_{{ package_snake }}._{{ package_type }}_{{ package_snake }} import *  # pyright:ignore
 
-service_snake:
-  type: str
-  help: "Name of the service in snake_case (e.g. fs, s3, hdfs_native)"
-  default: "{{ service_name | replace('-', '_') | replace(' ', '_') | lower }}"
-
-service_kebab:
-  type: str
-  help: "Name of the service in kebab-case (e.g. fs, s3, hdfs-native)"
-  default: "{{ service_name | replace('_', '-') | replace(' ', '-') | lower }}"
+{% if package_type == 'service' %}
+__all__ = ["__version__", "{{ package_pascal }}"]  # pyright:ignore
+{% else %}
+__all__ = ["__version__", "{{ package_pascal }}Layer"]  # pyright:ignore
+{% endif %}

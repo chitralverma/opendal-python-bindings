@@ -105,10 +105,6 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
             });
         } else {
             // Upstream is T, we have T. Direct assignment.
-            // Note: This assumes parsing logic sets `optional` correctly for non-option types.
-            // Actually, my parser logic for `effective_optional` above matches `parser.rs`.
-            // Wait, if parser says `is_option` is false, and it's NOT bool, then `effective_optional` is false.
-            // So we have `T`.
             from_impls.push(quote! {
                 cfg.#field_name = opts.#field_name;
             });

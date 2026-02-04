@@ -16,10 +16,10 @@
 # under the License.
 
 [package]
-name = "opendal-service-{{ service_kebab }}"
+name = "opendal-{{ package_type }}-{{ package_kebab }}"
 
 authors = { workspace = true }
-description = "Apache OpenDAL™ Python Bindings ({{ service_kebab }} service)"
+description = "Apache OpenDAL™ Python Bindings ({{ package_kebab }} {{ package_type }})"
 edition = { workspace = true }
 homepage = { workspace = true }
 keywords = []
@@ -31,21 +31,25 @@ version = { workspace = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-name = "_service_{{ service_snake }}"
+name = "_{{ package_type }}_{{ package_snake }}"
 
 [[bin]]
 doc = false
-name = "stub_gen_{{ service_snake }}"
+name = "stub_gen_{{ package_snake }}"
 
 [dependencies]
-opendal-service-{{ service_kebab }} = { git = "https://github.com/apache/opendal.git", branch = "main" }
+opendal-{{ package_type }}-{{ package_kebab }} = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { workspace = true }
+{% if package_type == 'service' %}
 pyo3-async-runtimes = { workspace = true }
+{% endif %}
 pyo3-opendal = { workspace = true, features = ["runtime", "stub-gen"] }
 pyo3-stub-gen = { workspace = true }
+{% if package_type == 'service' %}
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true }
+{% endif %}
 
 [build-dependencies]
 anyhow = { workspace = true }

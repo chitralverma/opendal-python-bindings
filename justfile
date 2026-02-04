@@ -61,6 +61,11 @@ stub-gen:
         SERVICE_NAME=$(basename "$SERVICE_DIR"); \
         echo "{{ BOLD }}--- Generating stubs for (opendal-service-${SERVICE_NAME}) ---{{ NORMAL }}"; \
         cargo run --quiet --manifest-path ${SERVICE_DIR}/Cargo.toml --bin stub_gen_"${SERVICE_NAME}";' {} \;
+    @find "{{ workspace_root }}/layers" -maxdepth 1 -mindepth 1 -type d \
+        -exec bash -c 'LAYER_DIR="$0"; \
+        LAYER_NAME=$(basename "$LAYER_DIR"); \
+        echo "{{ BOLD }}--- Generating stubs for (opendal-layer-${LAYER_NAME}) ---{{ NORMAL }}"; \
+        cargo run --quiet --manifest-path ${LAYER_DIR}/Cargo.toml --bin stub_gen_"${LAYER_NAME}";' {} \;
     -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
     @just fmt
 
@@ -143,12 +148,23 @@ build-docs *args: stub-gen
 [group('dev')]
 generate-service service_name: setup
     @echo "{{ BOLD }}--- Generating service package (opendal-service-{{ replace(service_name, '_', '-') }}) ---{{ NORMAL }}"
-    @uv run copier copy --data service_name={{ service_name }} {{ workspace_root }}/templates/service {{ workspace_root }}/services/{{ replace(service_name, '_', '-') }}
-    @uv run python {{ workspace_root }}/scripts/add_service_to_opendal.py {{ replace(service_name, '_', '-') }} {{ workspace_root }}
+    @uv run copier copy --data package_name={{ service_name }} --data package_type=service {{ workspace_root }}/templates/package {{ workspace_root }}/services/{{ replace(service_name, '_', '-') }}
+    @uv run python {{ workspace_root }}/scripts/add_package_to_opendal.py service {{ replace(service_name, '_', '-') }} {{ workspace_root }}
     @cargo run --quiet --manifest-path {{ workspace_root }}/services/{{ replace(service_name, '_', '-') }}/Cargo.toml --bin stub_gen_{{ replace(service_name, '-', '_') }}
     -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
     @just fmt
     @echo "{{ BOLD }}--- Service package (opendal-service-{{ replace(service_name, '_', '-') }}) is ready ---{{ NORMAL }}"
+
+# Generate a new opendal layer package from template
+[group('dev')]
+generate-layer layer_name: setup
+    @echo "{{ BOLD }}--- Generating layer package (opendal-layer-{{ replace(layer_name, '_', '-') }}) ---{{ NORMAL }}"
+    @uv run copier copy --data package_name={{ layer_name }} --data package_type=layer {{ workspace_root }}/templates/package {{ workspace_root }}/layers/{{ replace(layer_name, '_', '-') }}
+    @uv run python {{ workspace_root }}/scripts/add_package_to_opendal.py layer {{ replace(layer_name, '_', '-') }} {{ workspace_root }}
+    @cargo run --quiet --manifest-path {{ workspace_root }}/layers/{{ replace(layer_name, '_', '-') }}/Cargo.toml --bin stub_gen_{{ replace(layer_name, '-', '_') }}
+    -@bash -c 'shopt -s globstar; uv run ruff check **/*.pyi --fix --unsafe-fixes --silent || true'
+    @just fmt
+    @echo "{{ BOLD }}--- Layer package (opendal-layer-{{ replace(layer_name, '_', '-') }}) is ready ---{{ NORMAL }}"
 
 # ==============================================================================
 # Code Quality & Formatting
