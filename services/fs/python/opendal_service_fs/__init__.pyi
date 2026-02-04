@@ -30,17 +30,17 @@ __all__ = [
 @typing.final
 class Fs:
     @property
-    def root(self) -> builtins.str | None:
-        r"""Root dir for backend."""
-    @root.setter
-    def root(self, value: builtins.str | None) -> None:
-        r"""Root dir for backend."""
-    @property
     def atomic_write_dir(self) -> builtins.str | None:
         r"""Tmp dir for atomic write."""
     @atomic_write_dir.setter
     def atomic_write_dir(self, value: builtins.str | None) -> None:
         r"""Tmp dir for atomic write."""
+    @property
+    def root(self) -> builtins.str | None:
+        r"""Root dir for backend."""
+    @root.setter
+    def root(self, value: builtins.str | None) -> None:
+        r"""Root dir for backend."""
     def __new__(cls, **kwargs: typing.Any) -> Fs: ...
     @staticmethod
     def from_config(**kwargs: typing.Any) -> Fs: ...

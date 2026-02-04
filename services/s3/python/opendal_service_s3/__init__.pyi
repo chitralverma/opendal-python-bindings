@@ -32,22 +32,58 @@ __all__ = [
 @typing.final
 class S3:
     @property
-    def root(self) -> builtins.str | None:
+    def access_key_id(self) -> builtins.str | None:
         r"""
-        Root of this backend.
+        access_key_id of this backend.
 
-        All operations will happen under this root.
-
-        default to `/` if not set.
+        - If access_key_id is set, we will take user's input first.
+        - If not, we will try to load it from environment.
         """
-    @root.setter
-    def root(self, value: builtins.str | None) -> None:
+    @access_key_id.setter
+    def access_key_id(self, value: builtins.str | None) -> None:
         r"""
-        Root of this backend.
+        access_key_id of this backend.
 
-        All operations will happen under this root.
+        - If access_key_id is set, we will take user's input first.
+        - If not, we will try to load it from environment.
+        """
+    @property
+    def allow_anonymous(self) -> builtins.bool | None:
+        r"""
+        Allow anonymous will allow opendal to send request without signing
+        when credential is not loaded.
+        """
+    @allow_anonymous.setter
+    def allow_anonymous(self, value: builtins.bool | None) -> None:
+        r"""
+        Allow anonymous will allow opendal to send request without signing
+        when credential is not loaded.
+        """
+    @typing_extensions.deprecated(
+        "[Since 0.52.0] Please use `delete_max_size` instead of `batch_max_operations`"
+    )
+    @property
+    def batch_max_operations(self) -> builtins.int | None:
+        r"""
+        Set maximum batch operations of this backend.
 
-        default to `/` if not set.
+        Some compatible services have a limit on the number of operations in a batch request.
+        For example, R2 could return `Internal Error` while batch delete 1000 files.
+
+        Please tune this value based on services' document.
+        """
+    @batch_max_operations.setter
+    @typing_extensions.deprecated(
+        "[Since 0.52.0] Please use `delete_max_size` instead of `batch_max_operations`"
+    )
+    def batch_max_operations(self, value: builtins.int | None) -> None:
+        r"""
+        Set maximum batch operations of this backend.
+
+        Some compatible services have a limit on the number of operations in a batch request.
+        For example, R2 could return `Internal Error` while batch delete 1000 files.
+
+        Please tune this value based on services' document.
         """
     @property
     def bucket(self) -> builtins.str:
@@ -64,11 +100,199 @@ class S3:
         required.
         """
     @property
+    def checksum_algorithm(self) -> builtins.str | None:
+        r"""
+        Checksum Algorithm to use when sending checksums in HTTP headers.
+        This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example.
+
+        Available options:
+        - "crc32c"
+        - "md5"
+        """
+    @checksum_algorithm.setter
+    def checksum_algorithm(self, value: builtins.str | None) -> None:
+        r"""
+        Checksum Algorithm to use when sending checksums in HTTP headers.
+        This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example.
+
+        Available options:
+        - "crc32c"
+        - "md5"
+        """
+    @property
+    def default_storage_class(self) -> builtins.str | None:
+        r"""
+        Default storage_class for this backend.
+
+        Available values:
+        - `DEEP_ARCHIVE`
+        - `GLACIER`
+        - `GLACIER_IR`
+        - `INTELLIGENT_TIERING`
+        - `ONEZONE_IA`
+        - `EXPRESS_ONEZONE`
+        - `OUTPOSTS`
+        - `REDUCED_REDUNDANCY`
+        - `STANDARD`
+        - `STANDARD_IA`
+
+        S3 compatible services don't support all of them
+        """
+    @default_storage_class.setter
+    def default_storage_class(self, value: builtins.str | None) -> None:
+        r"""
+        Default storage_class for this backend.
+
+        Available values:
+        - `DEEP_ARCHIVE`
+        - `GLACIER`
+        - `GLACIER_IR`
+        - `INTELLIGENT_TIERING`
+        - `ONEZONE_IA`
+        - `EXPRESS_ONEZONE`
+        - `OUTPOSTS`
+        - `REDUCED_REDUNDANCY`
+        - `STANDARD`
+        - `STANDARD_IA`
+
+        S3 compatible services don't support all of them
+        """
+    @property
+    def delete_max_size(self) -> builtins.int | None:
+        r"""
+        Set the maximum delete size of this backend.
+
+        Some compatible services have a limit on the number of operations in a batch request.
+        For example, R2 could return `Internal Error` while batch delete 1000 files.
+
+        Please tune this value based on services' document.
+        """
+    @delete_max_size.setter
+    def delete_max_size(self, value: builtins.int | None) -> None:
+        r"""
+        Set the maximum delete size of this backend.
+
+        Some compatible services have a limit on the number of operations in a batch request.
+        For example, R2 could return `Internal Error` while batch delete 1000 files.
+
+        Please tune this value based on services' document.
+        """
+    @property
+    def disable_config_load(self) -> builtins.bool | None:
+        r"""
+        Disable config load so that opendal will not load config from
+        environment.
+
+        For examples:
+
+        - envs like `AWS_ACCESS_KEY_ID`
+        - files like `~/.aws/config`
+        """
+    @disable_config_load.setter
+    def disable_config_load(self, value: builtins.bool | None) -> None:
+        r"""
+        Disable config load so that opendal will not load config from
+        environment.
+
+        For examples:
+
+        - envs like `AWS_ACCESS_KEY_ID`
+        - files like `~/.aws/config`
+        """
+    @property
+    def disable_ec2_metadata(self) -> builtins.bool | None:
+        r"""
+        Disable load credential from ec2 metadata.
+
+        This option is used to disable the default behavior of opendal
+        to load credential from ec2 metadata, a.k.a., IMDSv2
+        """
+    @disable_ec2_metadata.setter
+    def disable_ec2_metadata(self, value: builtins.bool | None) -> None:
+        r"""
+        Disable load credential from ec2 metadata.
+
+        This option is used to disable the default behavior of opendal
+        to load credential from ec2 metadata, a.k.a., IMDSv2
+        """
+    @property
+    def disable_list_objects_v2(self) -> builtins.bool | None:
+        r"""
+        OpenDAL uses List Objects V2 by default to list objects.
+        However, some legacy services do not yet support V2.
+        This option allows users to switch back to the older List Objects V1.
+        """
+    @disable_list_objects_v2.setter
+    def disable_list_objects_v2(self, value: builtins.bool | None) -> None:
+        r"""
+        OpenDAL uses List Objects V2 by default to list objects.
+        However, some legacy services do not yet support V2.
+        This option allows users to switch back to the older List Objects V1.
+        """
+    @property
+    def disable_stat_with_override(self) -> builtins.bool | None:
+        r"""
+        Disable stat with override so that opendal will not send stat request with override queries.
+
+        For example, R2 doesn't support stat with `response_content_type` query.
+        """
+    @disable_stat_with_override.setter
+    def disable_stat_with_override(self, value: builtins.bool | None) -> None:
+        r"""
+        Disable stat with override so that opendal will not send stat request with override queries.
+
+        For example, R2 doesn't support stat with `response_content_type` query.
+        """
+    @property
+    def disable_write_with_if_match(self) -> builtins.bool | None:
+        r"""
+        Disable write with if match so that opendal will not send write request with if match headers.
+
+        For example, Ceph RADOS S3 doesn't support write with if matched.
+        """
+    @disable_write_with_if_match.setter
+    def disable_write_with_if_match(self, value: builtins.bool | None) -> None:
+        r"""
+        Disable write with if match so that opendal will not send write request with if match headers.
+
+        For example, Ceph RADOS S3 doesn't support write with if matched.
+        """
+    @property
+    def enable_request_payer(self) -> builtins.bool | None:
+        r"""Indicates whether the client agrees to pay for the requests made to the S3 bucket."""
+    @enable_request_payer.setter
+    def enable_request_payer(self, value: builtins.bool | None) -> None:
+        r"""Indicates whether the client agrees to pay for the requests made to the S3 bucket."""
+    @property
     def enable_versioning(self) -> builtins.bool | None:
         r"""Is bucket versioning enabled for this bucket."""
     @enable_versioning.setter
     def enable_versioning(self, value: builtins.bool | None) -> None:
         r"""Is bucket versioning enabled for this bucket."""
+    @property
+    def enable_virtual_host_style(self) -> builtins.bool | None:
+        r"""
+        Enable virtual host style so that opendal will send API requests
+        in virtual host style instead of path style.
+
+        - By default, opendal will send API to `https://s3.us-east-1.amazonaws.com/bucket_name`
+        - Enabled, opendal will send API to `https://bucket_name.s3.us-east-1.amazonaws.com`
+        """
+    @enable_virtual_host_style.setter
+    def enable_virtual_host_style(self, value: builtins.bool | None) -> None:
+        r"""
+        Enable virtual host style so that opendal will send API requests
+        in virtual host style instead of path style.
+
+        - By default, opendal will send API to `https://s3.us-east-1.amazonaws.com/bucket_name`
+        - Enabled, opendal will send API to `https://bucket_name.s3.us-east-1.amazonaws.com`
+        """
+    @property
+    def enable_write_with_append(self) -> builtins.bool | None:
+        r"""Enable write with append so that opendal will send write request with append headers."""
+    @enable_write_with_append.setter
+    def enable_write_with_append(self, value: builtins.bool | None) -> None:
+        r"""Enable write with append so that opendal will send write request with append headers."""
     @property
     def endpoint(self) -> builtins.str | None:
         r"""
@@ -110,6 +334,12 @@ class S3:
         - If still not set, default to `https://s3.amazonaws.com`.
         """
     @property
+    def external_id(self) -> builtins.str | None:
+        r"""external_id for this backend."""
+    @external_id.setter
+    def external_id(self, value: builtins.str | None) -> None:
+        r"""external_id for this backend."""
+    @property
     def region(self) -> builtins.str | None:
         r"""
         Region represent the signing region of this endpoint. This is required
@@ -130,54 +360,6 @@ class S3:
         - If not, we will try to load it from environment.
         """
     @property
-    def access_key_id(self) -> builtins.str | None:
-        r"""
-        access_key_id of this backend.
-
-        - If access_key_id is set, we will take user's input first.
-        - If not, we will try to load it from environment.
-        """
-    @access_key_id.setter
-    def access_key_id(self, value: builtins.str | None) -> None:
-        r"""
-        access_key_id of this backend.
-
-        - If access_key_id is set, we will take user's input first.
-        - If not, we will try to load it from environment.
-        """
-    @property
-    def secret_access_key(self) -> builtins.str | None:
-        r"""
-        secret_access_key of this backend.
-
-        - If secret_access_key is set, we will take user's input first.
-        - If not, we will try to load it from environment.
-        """
-    @secret_access_key.setter
-    def secret_access_key(self, value: builtins.str | None) -> None:
-        r"""
-        secret_access_key of this backend.
-
-        - If secret_access_key is set, we will take user's input first.
-        - If not, we will try to load it from environment.
-        """
-    @property
-    def session_token(self) -> builtins.str | None:
-        r"""
-        session_token (aka, security token) of this backend.
-
-        This token will expire after sometime, it's recommended to set session_token
-        by hand.
-        """
-    @session_token.setter
-    def session_token(self, value: builtins.str | None) -> None:
-        r"""
-        session_token (aka, security token) of this backend.
-
-        This token will expire after sometime, it's recommended to set session_token
-        by hand.
-        """
-    @property
     def role_arn(self) -> builtins.str | None:
         r"""
         role_arn for this backend.
@@ -194,66 +376,44 @@ class S3:
         credential to assume role with `role_arn`.
         """
     @property
-    def external_id(self) -> builtins.str | None:
-        r"""external_id for this backend."""
-    @external_id.setter
-    def external_id(self, value: builtins.str | None) -> None:
-        r"""external_id for this backend."""
-    @property
     def role_session_name(self) -> builtins.str | None:
         r"""role_session_name for this backend."""
     @role_session_name.setter
     def role_session_name(self, value: builtins.str | None) -> None:
         r"""role_session_name for this backend."""
     @property
-    def disable_config_load(self) -> builtins.bool | None:
+    def root(self) -> builtins.str | None:
         r"""
-        Disable config load so that opendal will not load config from
-        environment.
+        Root of this backend.
 
-        For examples:
+        All operations will happen under this root.
 
-        - envs like `AWS_ACCESS_KEY_ID`
-        - files like `~/.aws/config`
+        default to `/` if not set.
         """
-    @disable_config_load.setter
-    def disable_config_load(self, value: builtins.bool | None) -> None:
+    @root.setter
+    def root(self, value: builtins.str | None) -> None:
         r"""
-        Disable config load so that opendal will not load config from
-        environment.
+        Root of this backend.
 
-        For examples:
+        All operations will happen under this root.
 
-        - envs like `AWS_ACCESS_KEY_ID`
-        - files like `~/.aws/config`
+        default to `/` if not set.
         """
     @property
-    def disable_ec2_metadata(self) -> builtins.bool | None:
+    def secret_access_key(self) -> builtins.str | None:
         r"""
-        Disable load credential from ec2 metadata.
+        secret_access_key of this backend.
 
-        This option is used to disable the default behavior of opendal
-        to load credential from ec2 metadata, a.k.a., IMDSv2
+        - If secret_access_key is set, we will take user's input first.
+        - If not, we will try to load it from environment.
         """
-    @disable_ec2_metadata.setter
-    def disable_ec2_metadata(self, value: builtins.bool | None) -> None:
+    @secret_access_key.setter
+    def secret_access_key(self, value: builtins.str | None) -> None:
         r"""
-        Disable load credential from ec2 metadata.
+        secret_access_key of this backend.
 
-        This option is used to disable the default behavior of opendal
-        to load credential from ec2 metadata, a.k.a., IMDSv2
-        """
-    @property
-    def allow_anonymous(self) -> builtins.bool | None:
-        r"""
-        Allow anonymous will allow opendal to send request without signing
-        when credential is not loaded.
-        """
-    @allow_anonymous.setter
-    def allow_anonymous(self, value: builtins.bool | None) -> None:
-        r"""
-        Allow anonymous will allow opendal to send request without signing
-        when credential is not loaded.
+        - If secret_access_key is set, we will take user's input first.
+        - If not, we will try to load it from environment.
         """
     @property
     def server_side_encryption(self) -> builtins.str | None:
@@ -346,181 +506,21 @@ class S3:
         Value: MD5 digest of key specified in `server_side_encryption_customer_key`.
         """
     @property
-    def default_storage_class(self) -> builtins.str | None:
+    def session_token(self) -> builtins.str | None:
         r"""
-        Default storage_class for this backend.
+        session_token (aka, security token) of this backend.
 
-        Available values:
-        - `DEEP_ARCHIVE`
-        - `GLACIER`
-        - `GLACIER_IR`
-        - `INTELLIGENT_TIERING`
-        - `ONEZONE_IA`
-        - `EXPRESS_ONEZONE`
-        - `OUTPOSTS`
-        - `REDUCED_REDUNDANCY`
-        - `STANDARD`
-        - `STANDARD_IA`
-
-        S3 compatible services don't support all of them
+        This token will expire after sometime, it's recommended to set session_token
+        by hand.
         """
-    @default_storage_class.setter
-    def default_storage_class(self, value: builtins.str | None) -> None:
+    @session_token.setter
+    def session_token(self, value: builtins.str | None) -> None:
         r"""
-        Default storage_class for this backend.
+        session_token (aka, security token) of this backend.
 
-        Available values:
-        - `DEEP_ARCHIVE`
-        - `GLACIER`
-        - `GLACIER_IR`
-        - `INTELLIGENT_TIERING`
-        - `ONEZONE_IA`
-        - `EXPRESS_ONEZONE`
-        - `OUTPOSTS`
-        - `REDUCED_REDUNDANCY`
-        - `STANDARD`
-        - `STANDARD_IA`
-
-        S3 compatible services don't support all of them
+        This token will expire after sometime, it's recommended to set session_token
+        by hand.
         """
-    @property
-    def enable_virtual_host_style(self) -> builtins.bool | None:
-        r"""
-        Enable virtual host style so that opendal will send API requests
-        in virtual host style instead of path style.
-
-        - By default, opendal will send API to `https://s3.us-east-1.amazonaws.com/bucket_name`
-        - Enabled, opendal will send API to `https://bucket_name.s3.us-east-1.amazonaws.com`
-        """
-    @enable_virtual_host_style.setter
-    def enable_virtual_host_style(self, value: builtins.bool | None) -> None:
-        r"""
-        Enable virtual host style so that opendal will send API requests
-        in virtual host style instead of path style.
-
-        - By default, opendal will send API to `https://s3.us-east-1.amazonaws.com/bucket_name`
-        - Enabled, opendal will send API to `https://bucket_name.s3.us-east-1.amazonaws.com`
-        """
-    @typing_extensions.deprecated(
-        "[Since 0.52.0] Please use `delete_max_size` instead of `batch_max_operations`"
-    )
-    @property
-    def batch_max_operations(self) -> builtins.int | None:
-        r"""
-        Set maximum batch operations of this backend.
-
-        Some compatible services have a limit on the number of operations in a batch request.
-        For example, R2 could return `Internal Error` while batch delete 1000 files.
-
-        Please tune this value based on services' document.
-        """
-    @batch_max_operations.setter
-    @typing_extensions.deprecated(
-        "[Since 0.52.0] Please use `delete_max_size` instead of `batch_max_operations`"
-    )
-    def batch_max_operations(self, value: builtins.int | None) -> None:
-        r"""
-        Set maximum batch operations of this backend.
-
-        Some compatible services have a limit on the number of operations in a batch request.
-        For example, R2 could return `Internal Error` while batch delete 1000 files.
-
-        Please tune this value based on services' document.
-        """
-    @property
-    def delete_max_size(self) -> builtins.int | None:
-        r"""
-        Set the maximum delete size of this backend.
-
-        Some compatible services have a limit on the number of operations in a batch request.
-        For example, R2 could return `Internal Error` while batch delete 1000 files.
-
-        Please tune this value based on services' document.
-        """
-    @delete_max_size.setter
-    def delete_max_size(self, value: builtins.int | None) -> None:
-        r"""
-        Set the maximum delete size of this backend.
-
-        Some compatible services have a limit on the number of operations in a batch request.
-        For example, R2 could return `Internal Error` while batch delete 1000 files.
-
-        Please tune this value based on services' document.
-        """
-    @property
-    def disable_stat_with_override(self) -> builtins.bool | None:
-        r"""
-        Disable stat with override so that opendal will not send stat request with override queries.
-
-        For example, R2 doesn't support stat with `response_content_type` query.
-        """
-    @disable_stat_with_override.setter
-    def disable_stat_with_override(self, value: builtins.bool | None) -> None:
-        r"""
-        Disable stat with override so that opendal will not send stat request with override queries.
-
-        For example, R2 doesn't support stat with `response_content_type` query.
-        """
-    @property
-    def checksum_algorithm(self) -> builtins.str | None:
-        r"""
-        Checksum Algorithm to use when sending checksums in HTTP headers.
-        This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example.
-
-        Available options:
-        - "crc32c"
-        - "md5"
-        """
-    @checksum_algorithm.setter
-    def checksum_algorithm(self, value: builtins.str | None) -> None:
-        r"""
-        Checksum Algorithm to use when sending checksums in HTTP headers.
-        This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example.
-
-        Available options:
-        - "crc32c"
-        - "md5"
-        """
-    @property
-    def disable_write_with_if_match(self) -> builtins.bool | None:
-        r"""
-        Disable write with if match so that opendal will not send write request with if match headers.
-
-        For example, Ceph RADOS S3 doesn't support write with if matched.
-        """
-    @disable_write_with_if_match.setter
-    def disable_write_with_if_match(self, value: builtins.bool | None) -> None:
-        r"""
-        Disable write with if match so that opendal will not send write request with if match headers.
-
-        For example, Ceph RADOS S3 doesn't support write with if matched.
-        """
-    @property
-    def enable_write_with_append(self) -> builtins.bool | None:
-        r"""Enable write with append so that opendal will send write request with append headers."""
-    @enable_write_with_append.setter
-    def enable_write_with_append(self, value: builtins.bool | None) -> None:
-        r"""Enable write with append so that opendal will send write request with append headers."""
-    @property
-    def disable_list_objects_v2(self) -> builtins.bool | None:
-        r"""
-        OpenDAL uses List Objects V2 by default to list objects.
-        However, some legacy services do not yet support V2.
-        This option allows users to switch back to the older List Objects V1.
-        """
-    @disable_list_objects_v2.setter
-    def disable_list_objects_v2(self, value: builtins.bool | None) -> None:
-        r"""
-        OpenDAL uses List Objects V2 by default to list objects.
-        However, some legacy services do not yet support V2.
-        This option allows users to switch back to the older List Objects V1.
-        """
-    @property
-    def enable_request_payer(self) -> builtins.bool | None:
-        r"""Indicates whether the client agrees to pay for the requests made to the S3 bucket."""
-    @enable_request_payer.setter
-    def enable_request_payer(self, value: builtins.bool | None) -> None:
-        r"""Indicates whether the client agrees to pay for the requests made to the S3 bucket."""
     def __new__(cls, **kwargs: typing.Any) -> S3: ...
     @staticmethod
     def from_config(**kwargs: typing.Any) -> S3: ...

@@ -33,18 +33,96 @@ use std::collections::HashMap;
 #[derive(Clone, Default, Serialize, Deserialize)]
 #[allow(deprecated)]
 pub struct PyS3Service {
-    #[doc = "root of this backend."]
+    #[doc = "access_key_id of this backend."]
     #[doc = ""]
-    #[doc = "All operations will happen under this root."]
+    #[doc = "- If access_key_id is set, we will take user's input first."]
+    #[doc = "- If not, we will try to load it from environment."]
+    pub access_key_id: Option<String>,
+    #[doc = "Allow anonymous will allow opendal to send request without signing"]
+    #[doc = "when credential is not loaded."]
+    pub allow_anonymous: Option<bool>,
+    #[doc = "Set maximum batch operations of this backend."]
     #[doc = ""]
-    #[doc = "default to `/` if not set."]
-    pub root: Option<String>,
+    #[doc = "Some compatible services have a limit on the number of operations in a batch request."]
+    #[doc = "For example, R2 could return `Internal Error` while batch delete 1000 files."]
+    #[doc = ""]
+    #[doc = "Please tune this value based on services' document."]
+    #[deprecated(
+        since = "0.52.0",
+        note = "Please use `delete_max_size` instead of `batch_max_operations`"
+    )]
+    pub batch_max_operations: Option<usize>,
     #[doc = "bucket name of this backend."]
     #[doc = ""]
     #[doc = "required."]
     pub bucket: String,
+    #[doc = "Checksum Algorithm to use when sending checksums in HTTP headers."]
+    #[doc = "This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example."]
+    #[doc = ""]
+    #[doc = "Available options:"]
+    #[doc = "- \"crc32c\""]
+    #[doc = "- \"md5\""]
+    pub checksum_algorithm: Option<String>,
+    #[doc = "default storage_class for this backend."]
+    #[doc = ""]
+    #[doc = "Available values:"]
+    #[doc = "- `DEEP_ARCHIVE`"]
+    #[doc = "- `GLACIER`"]
+    #[doc = "- `GLACIER_IR`"]
+    #[doc = "- `INTELLIGENT_TIERING`"]
+    #[doc = "- `ONEZONE_IA`"]
+    #[doc = "- `EXPRESS_ONEZONE`"]
+    #[doc = "- `OUTPOSTS`"]
+    #[doc = "- `REDUCED_REDUNDANCY`"]
+    #[doc = "- `STANDARD`"]
+    #[doc = "- `STANDARD_IA`"]
+    #[doc = ""]
+    #[doc = "S3 compatible services don't support all of them"]
+    pub default_storage_class: Option<String>,
+    #[doc = "Set the maximum delete size of this backend."]
+    #[doc = ""]
+    #[doc = "Some compatible services have a limit on the number of operations in a batch request."]
+    #[doc = "For example, R2 could return `Internal Error` while batch delete 1000 files."]
+    #[doc = ""]
+    #[doc = "Please tune this value based on services' document."]
+    pub delete_max_size: Option<usize>,
+    #[doc = "Disable config load so that opendal will not load config from"]
+    #[doc = "environment."]
+    #[doc = ""]
+    #[doc = "For examples:"]
+    #[doc = ""]
+    #[doc = "- envs like `AWS_ACCESS_KEY_ID`"]
+    #[doc = "- files like `~/.aws/config`"]
+    pub disable_config_load: Option<bool>,
+    #[doc = "Disable load credential from ec2 metadata."]
+    #[doc = ""]
+    #[doc = "This option is used to disable the default behavior of opendal"]
+    #[doc = "to load credential from ec2 metadata, a.k.a., IMDSv2"]
+    pub disable_ec2_metadata: Option<bool>,
+    #[doc = "OpenDAL uses List Objects V2 by default to list objects."]
+    #[doc = "However, some legacy services do not yet support V2."]
+    #[doc = "This option allows users to switch back to the older List Objects V1."]
+    pub disable_list_objects_v2: Option<bool>,
+    #[doc = "Disable stat with override so that opendal will not send stat request with override queries."]
+    #[doc = ""]
+    #[doc = "For example, R2 doesn't support stat with `response_content_type` query."]
+    pub disable_stat_with_override: Option<bool>,
+    #[doc = "Disable write with if match so that opendal will not send write request with if match headers."]
+    #[doc = ""]
+    #[doc = "For example, Ceph RADOS S3 doesn't support write with if matched."]
+    pub disable_write_with_if_match: Option<bool>,
+    #[doc = "Indicates whether the client agrees to pay for the requests made to the S3 bucket."]
+    pub enable_request_payer: Option<bool>,
     #[doc = "is bucket versioning enabled for this bucket"]
     pub enable_versioning: Option<bool>,
+    #[doc = "Enable virtual host style so that opendal will send API requests"]
+    #[doc = "in virtual host style instead of path style."]
+    #[doc = ""]
+    #[doc = "- By default, opendal will send API to `https://s3.us-east-1.amazonaws.com/bucket_name`"]
+    #[doc = "- Enabled, opendal will send API to `https://bucket_name.s3.us-east-1.amazonaws.com`"]
+    pub enable_virtual_host_style: Option<bool>,
+    #[doc = "Enable write with append so that opendal will send write request with append headers."]
+    pub enable_write_with_append: Option<bool>,
     #[doc = "endpoint of this backend."]
     #[doc = ""]
     #[doc = "Endpoint must be full uri, e.g."]
@@ -62,6 +140,8 @@ pub struct PyS3Service {
     #[doc = "- If not, we will try to load it from environment."]
     #[doc = "- If still not set, default to `https://s3.amazonaws.com`."]
     pub endpoint: Option<String>,
+    #[doc = "external_id for this backend."]
+    pub external_id: Option<String>,
     #[doc = "Region represent the signing region of this endpoint. This is required"]
     #[doc = "if you are using the default AWS S3 endpoint."]
     #[doc = ""]
@@ -69,46 +149,24 @@ pub struct PyS3Service {
     #[doc = "- If region is set, we will take user's input first."]
     #[doc = "- If not, we will try to load it from environment."]
     pub region: Option<String>,
-    #[doc = "access_key_id of this backend."]
-    #[doc = ""]
-    #[doc = "- If access_key_id is set, we will take user's input first."]
-    #[doc = "- If not, we will try to load it from environment."]
-    pub access_key_id: Option<String>,
-    #[doc = "secret_access_key of this backend."]
-    #[doc = ""]
-    #[doc = "- If secret_access_key is set, we will take user's input first."]
-    #[doc = "- If not, we will try to load it from environment."]
-    pub secret_access_key: Option<String>,
-    #[doc = "session_token (aka, security token) of this backend."]
-    #[doc = ""]
-    #[doc = "This token will expire after sometime, it's recommended to set session_token"]
-    #[doc = "by hand."]
-    pub session_token: Option<String>,
     #[doc = "role_arn for this backend."]
     #[doc = ""]
     #[doc = "If `role_arn` is set, we will use already known config as source"]
     #[doc = "credential to assume role with `role_arn`."]
     pub role_arn: Option<String>,
-    #[doc = "external_id for this backend."]
-    pub external_id: Option<String>,
     #[doc = "role_session_name for this backend."]
     pub role_session_name: Option<String>,
-    #[doc = "Disable config load so that opendal will not load config from"]
-    #[doc = "environment."]
+    #[doc = "root of this backend."]
     #[doc = ""]
-    #[doc = "For examples:"]
+    #[doc = "All operations will happen under this root."]
     #[doc = ""]
-    #[doc = "- envs like `AWS_ACCESS_KEY_ID`"]
-    #[doc = "- files like `~/.aws/config`"]
-    pub disable_config_load: Option<bool>,
-    #[doc = "Disable load credential from ec2 metadata."]
+    #[doc = "default to `/` if not set."]
+    pub root: Option<String>,
+    #[doc = "secret_access_key of this backend."]
     #[doc = ""]
-    #[doc = "This option is used to disable the default behavior of opendal"]
-    #[doc = "to load credential from ec2 metadata, a.k.a., IMDSv2"]
-    pub disable_ec2_metadata: Option<bool>,
-    #[doc = "Allow anonymous will allow opendal to send request without signing"]
-    #[doc = "when credential is not loaded."]
-    pub allow_anonymous: Option<bool>,
+    #[doc = "- If secret_access_key is set, we will take user's input first."]
+    #[doc = "- If not, we will try to load it from environment."]
+    pub secret_access_key: Option<String>,
     #[doc = "server_side_encryption for this backend."]
     #[doc = ""]
     #[doc = "Available values: `AES256`, `aws:kms`."]
@@ -137,124 +195,66 @@ pub struct PyS3Service {
     #[doc = ""]
     #[doc = "Value: MD5 digest of key specified in `server_side_encryption_customer_key`."]
     pub server_side_encryption_customer_key_md5: Option<String>,
-    #[doc = "default storage_class for this backend."]
+    #[doc = "session_token (aka, security token) of this backend."]
     #[doc = ""]
-    #[doc = "Available values:"]
-    #[doc = "- `DEEP_ARCHIVE`"]
-    #[doc = "- `GLACIER`"]
-    #[doc = "- `GLACIER_IR`"]
-    #[doc = "- `INTELLIGENT_TIERING`"]
-    #[doc = "- `ONEZONE_IA`"]
-    #[doc = "- `EXPRESS_ONEZONE`"]
-    #[doc = "- `OUTPOSTS`"]
-    #[doc = "- `REDUCED_REDUNDANCY`"]
-    #[doc = "- `STANDARD`"]
-    #[doc = "- `STANDARD_IA`"]
-    #[doc = ""]
-    #[doc = "S3 compatible services don't support all of them"]
-    pub default_storage_class: Option<String>,
-    #[doc = "Enable virtual host style so that opendal will send API requests"]
-    #[doc = "in virtual host style instead of path style."]
-    #[doc = ""]
-    #[doc = "- By default, opendal will send API to `https://s3.us-east-1.amazonaws.com/bucket_name`"]
-    #[doc = "- Enabled, opendal will send API to `https://bucket_name.s3.us-east-1.amazonaws.com`"]
-    pub enable_virtual_host_style: Option<bool>,
-    #[doc = "Set maximum batch operations of this backend."]
-    #[doc = ""]
-    #[doc = "Some compatible services have a limit on the number of operations in a batch request."]
-    #[doc = "For example, R2 could return `Internal Error` while batch delete 1000 files."]
-    #[doc = ""]
-    #[doc = "Please tune this value based on services' document."]
-    #[deprecated(
-        since = "0.52.0",
-        note = "Please use `delete_max_size` instead of `batch_max_operations`"
-    )]
-    pub batch_max_operations: Option<usize>,
-    #[doc = "Set the maximum delete size of this backend."]
-    #[doc = ""]
-    #[doc = "Some compatible services have a limit on the number of operations in a batch request."]
-    #[doc = "For example, R2 could return `Internal Error` while batch delete 1000 files."]
-    #[doc = ""]
-    #[doc = "Please tune this value based on services' document."]
-    pub delete_max_size: Option<usize>,
-    #[doc = "Disable stat with override so that opendal will not send stat request with override queries."]
-    #[doc = ""]
-    #[doc = "For example, R2 doesn't support stat with `response_content_type` query."]
-    pub disable_stat_with_override: Option<bool>,
-    #[doc = "Checksum Algorithm to use when sending checksums in HTTP headers."]
-    #[doc = "This is necessary when writing to AWS S3 Buckets with Object Lock enabled for example."]
-    #[doc = ""]
-    #[doc = "Available options:"]
-    #[doc = "- \"crc32c\""]
-    #[doc = "- \"md5\""]
-    pub checksum_algorithm: Option<String>,
-    #[doc = "Disable write with if match so that opendal will not send write request with if match headers."]
-    #[doc = ""]
-    #[doc = "For example, Ceph RADOS S3 doesn't support write with if matched."]
-    pub disable_write_with_if_match: Option<bool>,
-    #[doc = "Enable write with append so that opendal will send write request with append headers."]
-    pub enable_write_with_append: Option<bool>,
-    #[doc = "OpenDAL uses List Objects V2 by default to list objects."]
-    #[doc = "However, some legacy services do not yet support V2."]
-    #[doc = "This option allows users to switch back to the older List Objects V1."]
-    pub disable_list_objects_v2: Option<bool>,
-    #[doc = "Indicates whether the client agrees to pay for the requests made to the S3 bucket."]
-    pub enable_request_payer: Option<bool>,
+    #[doc = "This token will expire after sometime, it's recommended to set session_token"]
+    #[doc = "by hand."]
+    pub session_token: Option<String>,
 }
 impl From<PyS3Service> for S3Config {
     #[allow(deprecated)]
     fn from(opts: PyS3Service) -> Self {
         let mut cfg = S3Config::default();
-        cfg.root = opts.root;
-        cfg.bucket = opts.bucket;
-        if let Some(v) = opts.enable_versioning {
-            cfg.enable_versioning = v;
-        }
-        cfg.endpoint = opts.endpoint;
-        cfg.region = opts.region;
         cfg.access_key_id = opts.access_key_id;
-        cfg.secret_access_key = opts.secret_access_key;
-        cfg.session_token = opts.session_token;
-        cfg.role_arn = opts.role_arn;
-        cfg.external_id = opts.external_id;
-        cfg.role_session_name = opts.role_session_name;
+        if let Some(v) = opts.allow_anonymous {
+            cfg.allow_anonymous = v;
+        }
+        cfg.batch_max_operations = opts.batch_max_operations;
+        cfg.bucket = opts.bucket;
+        cfg.checksum_algorithm = opts.checksum_algorithm;
+        cfg.default_storage_class = opts.default_storage_class;
+        cfg.delete_max_size = opts.delete_max_size;
         if let Some(v) = opts.disable_config_load {
             cfg.disable_config_load = v;
         }
         if let Some(v) = opts.disable_ec2_metadata {
             cfg.disable_ec2_metadata = v;
         }
-        if let Some(v) = opts.allow_anonymous {
-            cfg.allow_anonymous = v;
+        if let Some(v) = opts.disable_list_objects_v2 {
+            cfg.disable_list_objects_v2 = v;
         }
+        if let Some(v) = opts.disable_stat_with_override {
+            cfg.disable_stat_with_override = v;
+        }
+        if let Some(v) = opts.disable_write_with_if_match {
+            cfg.disable_write_with_if_match = v;
+        }
+        if let Some(v) = opts.enable_request_payer {
+            cfg.enable_request_payer = v;
+        }
+        if let Some(v) = opts.enable_versioning {
+            cfg.enable_versioning = v;
+        }
+        if let Some(v) = opts.enable_virtual_host_style {
+            cfg.enable_virtual_host_style = v;
+        }
+        if let Some(v) = opts.enable_write_with_append {
+            cfg.enable_write_with_append = v;
+        }
+        cfg.endpoint = opts.endpoint;
+        cfg.external_id = opts.external_id;
+        cfg.region = opts.region;
+        cfg.role_arn = opts.role_arn;
+        cfg.role_session_name = opts.role_session_name;
+        cfg.root = opts.root;
+        cfg.secret_access_key = opts.secret_access_key;
         cfg.server_side_encryption = opts.server_side_encryption;
         cfg.server_side_encryption_aws_kms_key_id = opts.server_side_encryption_aws_kms_key_id;
         cfg.server_side_encryption_customer_algorithm =
             opts.server_side_encryption_customer_algorithm;
         cfg.server_side_encryption_customer_key = opts.server_side_encryption_customer_key;
         cfg.server_side_encryption_customer_key_md5 = opts.server_side_encryption_customer_key_md5;
-        cfg.default_storage_class = opts.default_storage_class;
-        if let Some(v) = opts.enable_virtual_host_style {
-            cfg.enable_virtual_host_style = v;
-        }
-        cfg.batch_max_operations = opts.batch_max_operations;
-        cfg.delete_max_size = opts.delete_max_size;
-        if let Some(v) = opts.disable_stat_with_override {
-            cfg.disable_stat_with_override = v;
-        }
-        cfg.checksum_algorithm = opts.checksum_algorithm;
-        if let Some(v) = opts.disable_write_with_if_match {
-            cfg.disable_write_with_if_match = v;
-        }
-        if let Some(v) = opts.enable_write_with_append {
-            cfg.enable_write_with_append = v;
-        }
-        if let Some(v) = opts.disable_list_objects_v2 {
-            cfg.disable_list_objects_v2 = v;
-        }
-        if let Some(v) = opts.enable_request_payer {
-            cfg.enable_request_payer = v;
-        }
+        cfg.session_token = opts.session_token;
         cfg
     }
 }

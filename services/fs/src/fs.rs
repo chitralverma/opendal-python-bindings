@@ -33,17 +33,17 @@ use std::collections::HashMap;
 #[derive(Clone, Default, Serialize, Deserialize)]
 #[allow(deprecated)]
 pub struct PyFsService {
-    #[doc = "root dir for backend"]
-    pub root: Option<String>,
     #[doc = "tmp dir for atomic write"]
     pub atomic_write_dir: Option<String>,
+    #[doc = "root dir for backend"]
+    pub root: Option<String>,
 }
 impl From<PyFsService> for FsConfig {
     #[allow(deprecated)]
     fn from(opts: PyFsService) -> Self {
         let mut cfg = FsConfig::default();
-        cfg.root = opts.root;
         cfg.atomic_write_dir = opts.atomic_write_dir;
+        cfg.root = opts.root;
         cfg
     }
 }

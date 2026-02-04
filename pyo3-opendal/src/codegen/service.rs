@@ -31,7 +31,9 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     }
 
     // 2. Parse config
-    let service_config = parse_service_config(&config_path, service_name)?;
+    let mut service_config = parse_service_config(&config_path, service_name)?;
+    // Sort config fields by name to ensure deterministic order
+    service_config.config.sort_by(|a, b| a.name.cmp(&b.name));
 
     let service_pascal = service_to_pascal(service_name);
     let service_snake = service_name.replace('-', "_");
