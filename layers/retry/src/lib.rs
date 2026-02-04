@@ -19,6 +19,7 @@
 // We will use `opyo3::Xxx` to represents all types from pyo3-opendal.
 use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
+
 use pyo3_stub_gen::define_stub_info_gatherer;
 
 #[allow(deprecated)]

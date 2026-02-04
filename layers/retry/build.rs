@@ -15,12 +15,21 @@
 // specific language governing permissions and limitations
 // under the License.
 
-use pyo3_stub_gen::Result;
+use std::env;
+use std::fs;
+use std::path::Path;
 
-fn main() -> Result<()> {
-    pyo3_opendal::codegen::generate_layer_stub(
-        "retry",
-        env!("CARGO_PKG_NAME"),
-        _layer_retry::stub_info,
-    )
+fn main() -> anyhow::Result<()> {
+    println!("cargo:rerun-if-changed=Cargo.toml");
+
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR")?;
+    let package_path = Path::new(&manifest_dir);
+
+    // Generate the code
+    let code = pyo3_opendal::codegen::layer::generate("retry", package_path)?;
+
+    // Write to src/retry.rs
+    fs::write(package_path.join("src/retry.rs"), code)?;
+
+    Ok(())
 }

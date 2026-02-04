@@ -1033,6 +1033,7 @@ dependencies = [
 name = "opendal-layer-retry"
 version = "0.47.0"
 dependencies = [
+ "anyhow",
  "opendal-layer-retry 0.55.0",
  "pyo3",
  "pyo3-opendal",
