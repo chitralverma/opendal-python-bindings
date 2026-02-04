@@ -17,6 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_service_{{ service_snake }}._service_{{ service_snake }} import *
+from opendal_service_{{ service_snake }}._service_{{ service_snake }} import *  # pyright:ignore
 
 __all__ = ["__version__", "{{ service_pascal }}"]  # pyright:ignore

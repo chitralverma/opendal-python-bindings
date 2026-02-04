@@ -35,9 +35,9 @@ version = "0.47.0"
 
 [workspace.dependencies]
 anyhow = "1"
-bytes = "1.10.1"
+bytes = "1"
 futures = "0.3"
-jiff = { version = "0.2.15" }
+jiff = "0.2"
 mea = "0.6"
 opendal-core = { git = "https://github.com/apache/opendal.git", branch = "main" }
 pyo3 = { version = "0.27", features = ["generate-import-lib", "jiff-02"] }

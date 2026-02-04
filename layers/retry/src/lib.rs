@@ -20,6 +20,8 @@
 use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
 use pyo3_stub_gen::define_stub_info_gatherer;
+
+#[allow(deprecated)]
 mod retry;
 pub use retry::*;
 
@@ -30,7 +32,7 @@ fn _layer_retry(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add version
     opyo3::add_version!(m)?;
 
-    m.add_class::<retry::PyRetryLayer>()?;
+    m.add_class::<PyRetryLayer>()?;
 
     Ok(())
 }
