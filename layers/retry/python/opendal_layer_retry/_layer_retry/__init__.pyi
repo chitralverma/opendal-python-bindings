@@ -19,6 +19,7 @@
 # ruff: noqa: E501, F401, F403, F405
 
 import builtins
+import datetime
 import typing
 
 import opendal
@@ -29,43 +30,35 @@ __all__ = [
 
 @typing.final
 class RetryLayer:
-    r"""
-    A layer that retries operations that fail with temporary errors.
-
-    Operations are retried if they fail with an error for which
-    `Error.is_temporary` returns `True`. If all retries are exhausted,
-    the error is marked as persistent and then returned.
-
-    Notes
-    -----
-    After an operation on a `Reader` or `Writer` has failed through
-    all retries, the object is in an undefined state. Reusing it
-    can lead to exceptions.
-    """
-
     def __new__(
         cls,
-        max_times: builtins.int | None = None,
         factor: builtins.float | None = None,
         jitter: builtins.bool = False,
-        max_delay: builtins.float | None = None,
-        min_delay: builtins.float | None = None,
+        max_delay: datetime.timedelta | None = None,
+        max_times: builtins.int | None = None,
+        min_delay: datetime.timedelta | None = None,
     ) -> opendal.layers.Layer:
         r"""
         Create a new RetryLayer.
 
         Parameters
         ----------
-        max_times : Optional[int]
-            Maximum number of retry attempts. Defaults to ``3``.
-        factor : Optional[float]
-            Backoff factor applied between retries. Defaults to ``2.0``.
-        jitter : bool
-            Whether to apply jitter to the backoff. Defaults to ``False``.
-        max_delay : Optional[float]
-            Maximum delay (in seconds) between retries. Defaults to ``60.0``.
-        min_delay : Optional[float]
-            Minimum delay (in seconds) between retries. Defaults to ``1.0``.
+        factor : float, optional
+           Set factor of current backoff.
+           # Panics
+           This function will panic if input factor smaller than `1.0`.
+        jitter : bool, optional
+           Set jitter of current backoff.
+           If jitter is enabled, ExponentialBackoff will add a random jitter in `[0, min_delay)
+           to current delay.
+        max_delay : datetime.timedelta, optional
+           Set max_delay of current backoff.
+           Delay will not increase if current delay is larger than max_delay.
+        max_times : int, optional
+           Set max_times of current backoff.
+           Backoff will return `None` if max times is reaching.
+        min_delay : datetime.timedelta, optional
+           Set min_delay of current backoff.
 
         Returns
         -------

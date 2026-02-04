@@ -16,7 +16,7 @@
 # under the License.
 
 [project]
-name = "opendal-service-{{ service_kebab }}"
+name = "opendal-layer-mime-guess"
 
 dependencies = ["opendal"]
 dynamic = [
@@ -37,7 +37,7 @@ requires-python = ">=3.12"
 opendal = { workspace = true }
 
 [tool.maturin]
-module-name = "opendal_service_{{ service_snake }}._service_{{ service_snake }}"
+module-name = "opendal_layer_mime_guess._layer_mime_guess"
 python-source = "python"
 
 [build-system]

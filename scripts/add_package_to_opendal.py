@@ -23,9 +23,9 @@ from pathlib import Path
 import tomlkit
 
 
-def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
-    """Update pyproject.toml with the new service."""
-    service_name = service_name_raw.replace("_", "-")
+def update_pyproject(type: str, name_raw: str, workspace_root: str) -> None:
+    """Update pyproject.toml with the new service or layer."""
+    name = name_raw.replace("_", "-")
     pyproject_path = Path(workspace_root) / "opendal" / "pyproject.toml"
 
     if not pyproject_path.exists():
@@ -41,9 +41,12 @@ def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
 
     project = doc["project"]
     opt_deps = project.get("optional-dependencies", tomlkit.table())
-    service_key = f"service-{service_name}"
-    if service_key not in opt_deps:
-        opt_deps[service_key] = [f"opendal-service-{service_name}"]
+
+    dep_key = f"{type}-{name}"
+    dep_val = f"opendal-{type}-{name}"
+
+    if dep_key not in opt_deps:
+        opt_deps[dep_key] = [dep_val]
     project["optional-dependencies"] = opt_deps
 
     # 2. Update [tool.uv.sources]
@@ -59,11 +62,10 @@ def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
         uv["sources"] = tomlkit.table()
 
     sources = uv["sources"]
-    package_key = f"opendal-service-{service_name}"
-    if package_key not in sources:
+    if dep_val not in sources:
         t = tomlkit.inline_table()
         t.update({"workspace": True})
-        sources[package_key] = t
+        sources[dep_val] = t
 
     uv["sources"] = sources
 
@@ -74,11 +76,12 @@ def update_pyproject(service_name_raw: str, workspace_root: str) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) == 3:
-        update_pyproject(sys.argv[1], sys.argv[2])
+    if len(sys.argv) == 4:
+        # type (service/layer), name, workspace_root
+        update_pyproject(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
         print(
-            "Usage: uv run python scripts/add_service_to_opendal.py",
-            "<service_name> <workspace_root>",
+            "Usage: uv run python scripts/add_package_to_opendal.py",
+            "<type> <name> <workspace_root>",
         )
         sys.exit(1)

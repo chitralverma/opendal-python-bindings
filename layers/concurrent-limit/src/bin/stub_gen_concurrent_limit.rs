@@ -18,9 +18,9 @@
 use pyo3_stub_gen::Result;
 
 fn main() -> Result<()> {
-    pyo3_opendal::codegen::generate_service_stub(
-        "{{ service_name }}",
+    pyo3_opendal::codegen::generate_layer_stub(
+        "concurrent-limit",
         env!("CARGO_PKG_NAME"),
-        _service_{{ service_snake }}::stub_info,
+        _layer_concurrent_limit::stub_info,
     )
 }

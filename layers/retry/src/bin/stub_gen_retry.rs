@@ -18,10 +18,9 @@
 use pyo3_stub_gen::Result;
 
 fn main() -> Result<()> {
-    // `stub_info` is a function defined by `define_stub_info_gatherer!` macro.
-    let mut stub = _layer_retry::stub_info()?;
-    let pkg_name = env!("CARGO_PKG_NAME").replace('-', "_");
-    stub.modules.retain(|k, _| k.starts_with(&pkg_name));
-    stub.generate()?;
-    Ok(())
+    pyo3_opendal::codegen::generate_layer_stub(
+        "retry",
+        env!("CARGO_PKG_NAME"),
+        _layer_retry::stub_info,
+    )
 }

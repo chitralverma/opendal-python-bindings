@@ -5,6 +5,8 @@ requires-python = ">=3.12"
 [manifest]
 members = [
     "opendal",
+    "opendal-layer-concurrent-limit",
+    "opendal-layer-mime-guess",
     "opendal-layer-retry",
     "opendal-python-bindings",
     "opendal-service-fs",
@@ -1162,6 +1164,12 @@ name = "opendal"
 source = { editable = "opendal" }
 
 [package.optional-dependencies]
+layer-concurrent-limit = [
+    { name = "opendal-layer-concurrent-limit" },
+]
+layer-mime-guess = [
+    { name = "opendal-layer-mime-guess" },
+]
 layer-retry = [
     { name = "opendal-layer-retry" },
 ]
@@ -1184,11 +1192,13 @@ benchmark = [
 
 [package.metadata]
 requires-dist = [
+    { name = "opendal-layer-concurrent-limit", marker = "extra == 'layer-concurrent-limit'", editable = "layers/concurrent-limit" },
+    { name = "opendal-layer-mime-guess", marker = "extra == 'layer-mime-guess'", editable = "layers/mime-guess" },
     { name = "opendal-layer-retry", marker = "extra == 'layer-retry'", editable = "layers/retry" },
     { name = "opendal-service-fs", marker = "extra == 'service-fs'", editable = "services/fs" },
     { name = "opendal-service-s3", marker = "extra == 'service-s3'", editable = "services/s3" },
 ]
-provides-extras = ["layer-retry", "service-fs", "service-s3"]
+provides-extras = ["layer-concurrent-limit", "layer-mime-guess", "layer-retry", "service-fs", "service-s3"]
 
 [package.metadata.requires-dev]
 benchmark = [
@@ -1199,6 +1209,26 @@ benchmark = [
     { name = "greenlet", specifier = ">=3.1.1" },
     { name = "pydantic", specifier = ">=2.10.6" },
 ]
+
+[[package]]
+name = "opendal-layer-concurrent-limit"
+source = { editable = "layers/concurrent-limit" }
+dependencies = [
+    { name = "opendal" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "opendal", editable = "opendal" }]
+
+[[package]]
+name = "opendal-layer-mime-guess"
+source = { editable = "layers/mime-guess" }
+dependencies = [
+    { name = "opendal" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "opendal", editable = "opendal" }]
 
 [[package]]
 name = "opendal-layer-retry"

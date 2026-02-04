@@ -15,8 +15,31 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# ruff: noqa: D104, F403, F405
+[project]
+name = "opendal-layer-concurrent-limit"
 
-from opendal_service_{{ service_snake }}._service_{{ service_snake }} import *
+dependencies = ["opendal"]
+dynamic = [
+  "version",
+  "description",
+  "keywords",
+  "license",
+  "summary",
+  "home_page",
+  "author",
+  "author_email",
+  "project_url",
+]
+readme = "README.md"
+requires-python = ">=3.12"
 
-__all__ = ["__version__", "{{ service_pascal }}"]
+[tool.uv.sources]
+opendal = { workspace = true }
+
+[tool.maturin]
+module-name = "opendal_layer_concurrent_limit._layer_concurrent_limit"
+python-source = "python"
+
+[build-system]
+build-backend = "maturin"
+requires = ["maturin>=1.9.4,<2.0"]

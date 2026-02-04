@@ -26,10 +26,10 @@ fn main() -> anyhow::Result<()> {
     let package_path = Path::new(&manifest_dir);
 
     // Generate the code
-    let code = pyo3_opendal::codegen::service::generate("{{ service_name }}", package_path)?;
+    let code = pyo3_opendal::codegen::layer::generate("concurrent-limit", package_path)?;
 
-    // Write to src/{{ service_snake }}.rs
-    fs::write(package_path.join("src/{{ service_snake }}.rs"), code)?;
+    // Write to src/concurrent_limit.rs
+    fs::write(package_path.join("src/concurrent_limit.rs"), code)?;
 
     Ok(())
 }

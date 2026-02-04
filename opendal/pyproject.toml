@@ -34,6 +34,8 @@ readme = "README.md"
 requires-python = ">=3.12"
 
 [project.optional-dependencies]
+layer-concurrent-limit = ["opendal-layer-concurrent-limit"]
+layer-mime-guess = ["opendal-layer-mime-guess"]
 layer-retry = ["opendal-layer-retry"]
 service-fs = ["opendal-service-fs"]
 service-s3 = ["opendal-service-s3"]
@@ -49,6 +51,8 @@ benchmark = [
 ]
 
 [tool.uv.sources]
+opendal-layer-concurrent-limit = { workspace = true }
+opendal-layer-mime-guess = { workspace = true }
 opendal-layer-retry = { workspace = true }
 opendal-service-fs = { workspace = true }
 opendal-service-s3 = { workspace = true }

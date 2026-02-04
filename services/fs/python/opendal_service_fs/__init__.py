@@ -17,6 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_service_fs._service_fs import *
+from opendal_service_fs._service_fs import *  # pyright:ignore
 
-__all__ = ["__version__", "Fs"]
+__all__ = ["__version__", "Fs"]  # pyright:ignore

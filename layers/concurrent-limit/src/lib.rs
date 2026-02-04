@@ -19,41 +19,21 @@
 // We will use `opyo3::Xxx` to represents all types from pyo3-opendal.
 use ::pyo3_opendal as opyo3;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+
 use pyo3_stub_gen::define_stub_info_gatherer;
 
 #[allow(deprecated)]
-mod {{ service_snake }};
-pub use {{ service_snake }}::*;
-
-use opyo3::PyRuntimeLayer;
-use opyo3::default_registry;
-use opyo3::define_build_operator;
-use opyo3::export::OpendalOperator;
-use opyo3::ocore::IntoOperatorUri;
-use opyo3::ocore::Operator;
-use std::sync::Once;
-
-static INIT: Once = Once::new();
-
-pub fn init() {
-    INIT.call_once(|| {
-        opendal_service_{{ service_snake }}::register_{{ service_snake }}_service(default_registry());
-    });
-}
-
-define_build_operator!();
+mod concurrent_limit;
+pub use concurrent_limit::*;
 
 #[pymodule(gil_used = false)]
-fn _service_{{ service_snake }}(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn _layer_concurrent_limit(py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
     opyo3::check_debug_build!(py, env!("CARGO_PKG_NAME"))?;
-    init();
 
     // Add version
     opyo3::add_version!(m)?;
 
-    m.add_function(wrap_pyfunction!(__build_operator__, m)?)?;
-    m.add_class::<Py{{ service_pascal }}Service>()?;
+    m.add_class::<PyConcurrentLimitLayer>()?;
 
     Ok(())
 }
