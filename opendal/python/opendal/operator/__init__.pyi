@@ -25,7 +25,7 @@ import os
 import pathlib
 import typing
 
-from opendal import capability, file, types
+import opendal
 
 __all__ = [
     "AsyncOperator",
@@ -212,7 +212,7 @@ class AsyncOperator:
         content_type: builtins.str | None = None,
         cache_control: builtins.str | None = None,
         content_disposition: builtins.str | None = None,
-    ) -> collections.abc.Awaitable[Metadata]:
+    ) -> collections.abc.Awaitable[opendal.types.Metadata]:
         r"""
         Get the metadata of a file at the given path.
 
@@ -482,7 +482,7 @@ class AsyncOperator:
         coroutine
             An awaitable that returns a presigned request object.
         """
-    def capability(self) -> capability.Capability:
+    def capability(self) -> opendal.capability.Capability:
         r"""
         Get all capabilities of this operator.
 
@@ -532,7 +532,7 @@ class Operator:
         path: builtins.str | os.PathLike | pathlib.Path,
         mode: builtins.str,
         **kwargs: typing.Any,
-    ) -> file.File:
+    ) -> opendal.file.File:
         r"""
         Open a file-like object for the given path.
 
@@ -676,7 +676,7 @@ class Operator:
         content_type: builtins.str | None = None,
         cache_control: builtins.str | None = None,
         content_disposition: builtins.str | None = None,
-    ) -> types.Metadata:
+    ) -> opendal.types.Metadata:
         r"""
         Get the metadata of a file at the given path.
 
@@ -853,7 +853,7 @@ class Operator:
         BlockingLister
             An iterator over the entries in the directory.
         """
-    def capability(self) -> capability.Capability:
+    def capability(self) -> opendal.capability.Capability:
         r"""
         Get all capabilities of this operator.
 

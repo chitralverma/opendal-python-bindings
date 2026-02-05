@@ -221,6 +221,10 @@ impl PyOperator {
     /// -------
     /// File
     ///     A file-like object.
+    #[gen_stub(override_return_type(
+        type_repr="opendal.file.File",
+        imports=("opendal")
+    ))]
     #[pyo3(signature = (path, mode, *, **kwargs))]
     pub fn open(
         &self,
@@ -476,6 +480,10 @@ impl PyOperator {
     /// Metadata
     ///     The metadata of the file.
     #[allow(clippy::too_many_arguments)]
+    #[gen_stub(override_return_type(
+        type_repr="opendal.types.Metadata",
+        imports=("opendal")
+    ))]
     #[pyo3(signature = (path, *,
         version=None,
         if_match=None,
@@ -636,7 +644,7 @@ impl PyOperator {
     ///     An iterator over the entries in the directory.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Iterable[opendal.types.Entry]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     #[pyo3(signature = (path, *,
         limit=None,
@@ -695,7 +703,7 @@ impl PyOperator {
     ///     An iterator over the entries in the directory.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Iterable[opendal.types.Entry]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     #[pyo3(signature = (path, *,
         limit=None,
@@ -719,6 +727,10 @@ impl PyOperator {
     /// -------
     /// Capability
     ///     The capability of the operator.
+    #[gen_stub(override_return_type(
+        type_repr="opendal.capability.Capability",
+        imports=("opendal")
+    ))]
     pub fn capability(&self) -> PyResult<capability::PyCapability> {
         Ok(capability::PyCapability::new(
             self.core.info().full_capability(),
@@ -895,7 +907,7 @@ impl PyAsyncOperator {
     ///     An awaitable that returns a file-like object.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[opendal.file.AsyncFile]",
-        imports=("collections.abc", "opendal.file")
+        imports=("collections.abc", "opendal")
     ))]
     #[pyo3(signature = (path, mode, *, **kwargs))]
     pub fn open<'p>(
@@ -1185,8 +1197,8 @@ impl PyAsyncOperator {
     ///     An awaitable that returns the metadata of the file.
     #[allow(clippy::too_many_arguments)]
     #[gen_stub(override_return_type(
-        type_repr="collections.abc.Awaitable[Metadata]",
-        imports=("collections.abc")
+        type_repr="collections.abc.Awaitable[opendal.types.Metadata]",
+        imports=("collections.abc", "opendal")
     ))]
     #[pyo3(signature = (path, *,
         version=None,
@@ -1448,7 +1460,7 @@ impl PyAsyncOperator {
     #[allow(clippy::too_many_arguments)]
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[collections.abc.AsyncIterable[opendal.types.Entry]]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     #[pyo3(signature = (path, *,
         limit=None,
@@ -1512,7 +1524,7 @@ impl PyAsyncOperator {
     ///     An awaitable that returns an async iterator over the entries.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[collections.abc.AsyncIterable[opendal.types.Entry]]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     #[gen_stub(skip)]
     #[pyo3(signature = (path, *,
@@ -1547,7 +1559,7 @@ impl PyAsyncOperator {
     ///     An awaitable that returns a presigned request object.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[opendal.types.PresignedRequest]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     pub fn presign_stat<'p>(
         &'p self,
@@ -1583,7 +1595,7 @@ impl PyAsyncOperator {
     ///     An awaitable that returns a presigned request object.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[opendal.types.PresignedRequest]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     pub fn presign_read<'p>(
         &'p self,
@@ -1619,7 +1631,7 @@ impl PyAsyncOperator {
     ///     An awaitable that returns a presigned request object.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[opendal.types.PresignedRequest]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     pub fn presign_write<'p>(
         &'p self,
@@ -1655,7 +1667,7 @@ impl PyAsyncOperator {
     ///     An awaitable that returns a presigned request object.
     #[gen_stub(override_return_type(
         type_repr="collections.abc.Awaitable[opendal.types.PresignedRequest]",
-        imports=("collections.abc", "opendal.types")
+        imports=("collections.abc", "opendal")
     ))]
     pub fn presign_delete<'p>(
         &'p self,
@@ -1682,6 +1694,10 @@ impl PyAsyncOperator {
     /// -------
     /// Capability
     ///     The capability of the operator.
+    #[gen_stub(override_return_type(
+        type_repr="opendal.capability.Capability",
+        imports=("opendal")
+    ))]
     pub fn capability(&self) -> PyResult<PyCapability> {
         Ok(capability::PyCapability::new(
             self.core.info().full_capability(),
