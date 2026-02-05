@@ -17,7 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal import *
 from opendal._core import *  # ty: ignore
 from opendal.operator import AsyncOperator, Operator
 
