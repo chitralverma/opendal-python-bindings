@@ -19,11 +19,13 @@
 
 import sys
 from pathlib import Path
+from typing import cast
 
 import tomlkit
+from tomlkit.items import Table
 
 
-def update_pyproject(type: str, name_raw: str, workspace_root: str) -> None:
+def update_pyproject(package_type: str, name_raw: str, workspace_root: str) -> None:
     """Update pyproject.toml with the new service or layer."""
     name = name_raw.replace("_", "-")
     pyproject_path = Path(workspace_root) / "opendal" / "pyproject.toml"
@@ -39,11 +41,11 @@ def update_pyproject(type: str, name_raw: str, workspace_root: str) -> None:
     if "project" not in doc:
         doc["project"] = tomlkit.table()
 
-    project = doc["project"]
+    project = cast(Table, doc["project"])
     opt_deps = project.get("optional-dependencies", tomlkit.table())
 
-    dep_key = f"{type}-{name}"
-    dep_val = f"opendal-{type}-{name}"
+    dep_key = f"{package_type}-{name}"
+    dep_val = f"opendal-{package_type}-{name}"
 
     if dep_key not in opt_deps:
         opt_deps[dep_key] = [dep_val]
@@ -53,15 +55,15 @@ def update_pyproject(type: str, name_raw: str, workspace_root: str) -> None:
     if "tool" not in doc:
         doc["tool"] = tomlkit.table()
 
-    tool = doc["tool"]
+    tool = cast(Table, doc["tool"])
     if "uv" not in tool:
         tool["uv"] = tomlkit.table()
 
-    uv = tool["uv"]
+    uv = cast(Table, tool["uv"])
     if "sources" not in uv:
         uv["sources"] = tomlkit.table()
 
-    sources = uv["sources"]
+    sources = cast(Table, uv["sources"])
     if dep_val not in sources:
         t = tomlkit.inline_table()
         t.update({"workspace": True})

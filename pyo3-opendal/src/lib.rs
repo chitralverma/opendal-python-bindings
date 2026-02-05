@@ -38,6 +38,7 @@ pub use lister::*;
 mod metadata;
 #[cfg(feature = "runtime")]
 pub use metadata::*;
+#[allow(deprecated)]
 #[cfg(feature = "runtime")]
 mod operator;
 #[cfg(feature = "runtime")]

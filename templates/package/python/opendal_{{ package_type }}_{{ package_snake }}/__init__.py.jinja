@@ -17,9 +17,9 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_{{ package_type }}_{{ package_snake }}._{{ package_type }}_{{ package_snake }} import *  # pyright:ignore
+from opendal_{{ package_type }}_{{ package_snake }}._{{ package_type }}_{{ package_snake }} import *
 {% if package_type == 'service' %}
-__all__ = ["__version__", "{{ package_pascal }}"]  # pyright:ignore
+__all__ = ["__version__", "{{ package_pascal }}"]
 {% else %}
-__all__ = ["__version__", "{{ package_pascal }}Layer"]  # pyright:ignore
+__all__ = ["__version__", "{{ package_pascal }}Layer"]
 {% endif %}

@@ -30,7 +30,7 @@ use pyo3_stub_gen::derive::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[gen_stub_pyclass]
-#[pyclass(get_all, set_all, module = "opendal_service_s3", name = "S3")]
+#[pyclass(get_all, set_all, name = "S3")]
 #[derive(Clone, Default, Serialize, Deserialize)]
 #[allow(deprecated)]
 pub struct PyS3Service {
@@ -285,13 +285,13 @@ impl PyS3Service {
             .map_err(pyo3_opendal::format_pyerr)?;
         Self::from_configurator(&cfg)
     }
-    # [gen_stub (override_return_type (type_repr = "opendal.AsyncOperator" , imports = ("opendal")))]
+    # [gen_stub (override_return_type (type_repr = "opendal.operator.AsyncOperator" , imports = ("opendal")))]
     pub fn to_async_operator(&self, py: Python) -> PyResult<OpendalOperator> {
         let cfg: S3Config = self.clone().into();
         let map = cfg.to_string_map()?;
         crate::__build_operator__(S3_SCHEME.into(), true, Some(&map.into_py_dict(py)?))
     }
-    # [gen_stub (override_return_type (type_repr = "opendal.Operator" , imports = ("opendal")))]
+    # [gen_stub (override_return_type (type_repr = "opendal.operator.Operator" , imports = ("opendal")))]
     pub fn to_operator(&self, py: Python) -> PyResult<OpendalOperator> {
         let cfg: S3Config = self.clone().into();
         let map = cfg.to_string_map()?;

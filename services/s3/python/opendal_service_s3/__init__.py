@@ -17,6 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_service_s3._service_s3 import *  # pyright:ignore
+from opendal_service_s3._service_s3 import *
 
-__all__ = ["__version__", "S3"]  # pyright:ignore
+__all__ = ["__version__", "S3"]

@@ -17,8 +17,7 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal import *  # pyright:ignore
-from opendal._core import *  # pyright:ignore
+from opendal._core import *  # ty: ignore
 from opendal.operator import AsyncOperator, Operator
 
 __all__ = [
@@ -29,5 +28,5 @@ __all__ = [
     "types",
     "AsyncOperator",
     "Operator",
-    "__version__",  # pyright:ignore
+    "__version__",
 ]

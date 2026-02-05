@@ -45,7 +45,6 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
     let scheme_ident = format_ident!("{}_SCHEME", service_snake.to_uppercase());
     let service_module = format_ident!("opendal_service_{}", service_snake);
     let service_pascal_lit = service_pascal.clone();
-    let service_snake_lit = format!("opendal_service_{}", service_snake);
 
     // 3. Generate struct fields
     let mut fields = Vec::new();
@@ -125,7 +124,7 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
         use std::collections::HashMap;
 
         #[gen_stub_pyclass]
-        #[pyclass(get_all, set_all, module = #service_snake_lit, name = #service_pascal_lit)]
+        #[pyclass(get_all, set_all, name = #service_pascal_lit)]
         #[derive(Clone, Default, Serialize, Deserialize)]
         #[allow(deprecated)]
         pub struct #py_service_ident {
@@ -173,14 +172,14 @@ pub fn generate(service_name: &str, package_path: &Path) -> Result<String> {
                 Self::from_configurator(&cfg)
             }
 
-            #[gen_stub(override_return_type(type_repr = "opendal.AsyncOperator", imports=("opendal")))]
+            #[gen_stub(override_return_type(type_repr = "opendal.operator.AsyncOperator", imports=("opendal")))]
             pub fn to_async_operator(&self, py: Python) -> PyResult<OpendalOperator> {
                 let cfg: #config_ident = self.clone().into();
                 let map = cfg.to_string_map()?;
                 crate::__build_operator__(#scheme_ident.into(), true, Some(&map.into_py_dict(py)?))
             }
 
-            #[gen_stub(override_return_type(type_repr = "opendal.Operator", imports=("opendal")))]
+            #[gen_stub(override_return_type(type_repr = "opendal.operator.Operator", imports=("opendal")))]
             pub fn to_operator(&self, py: Python) -> PyResult<OpendalOperator> {
                 let cfg: #config_ident = self.clone().into();
                 let map = cfg.to_string_map()?;

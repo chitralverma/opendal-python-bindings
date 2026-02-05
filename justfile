@@ -174,11 +174,12 @@ generate-layer layer_name: (_generate-package 'layer' layer_name)
 # Run all lint checks for Rust and Python
 [group('lint')]
 lint: setup
-    @echo "{{ BOLD }}--- Running Rust linter (Clippy) ---{{ NORMAL }}"
+    @echo "{{ BOLD }}--- Running Rust linter ---{{ NORMAL }}"
     ## remove `-A clippy::incompatible_msrv` until https://github.com/rust-lang/rust-clippy/issues/15792 is fixed and released
     @cargo clippy -- -D warnings -D clippy::dbg_macro -A clippy::incompatible_msrv
-    @echo "{{ BOLD }}--- Running Python linter (Ruff) ---{{ NORMAL }}"
+    @echo "{{ BOLD }}--- Running Python linter ---{{ NORMAL }}"
     @uv run ruff check
+    @uv run ty check
 
 # Format all code (Rust, Python, etc.)
 [group('lint')]
