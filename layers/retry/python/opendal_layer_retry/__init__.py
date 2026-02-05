@@ -17,6 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_layer_retry._layer_retry import *  # pyright:ignore
+from opendal_layer_retry._layer_retry import *
 
-__all__ = ["__version__", "RetryLayer"]  # pyright:ignore
+__all__ = ["__version__", "RetryLayer"]

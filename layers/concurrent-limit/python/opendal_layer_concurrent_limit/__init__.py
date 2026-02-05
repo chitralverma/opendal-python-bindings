@@ -17,6 +17,6 @@
 
 # ruff: noqa: D104, F403, F405
 
-from opendal_layer_concurrent_limit._layer_concurrent_limit import *  # pyright:ignore
+from opendal_layer_concurrent_limit._layer_concurrent_limit import *
 
-__all__ = ["__version__", "ConcurrentLimitLayer"]  # pyright:ignore
+__all__ = ["__version__", "ConcurrentLimitLayer"]
