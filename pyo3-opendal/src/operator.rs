@@ -111,7 +111,6 @@ impl PyOperator {
     /// -------
     /// Operator
     ///     The new operator.
-    #[gen_stub(skip)]
     #[new]
     #[pyo3(signature = (scheme, *, **kwargs))]
     pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
@@ -680,10 +679,6 @@ impl PyOperator {
 
     /// Recursively list entries in the given directory.
     ///
-    /// Deprecated
-    /// ----------
-    ///     Use `list()` with `recursive=True` instead.
-    ///
     /// Parameters
     /// ----------
     /// path : str
@@ -710,6 +705,7 @@ impl PyOperator {
         start_after=None,
         versions=None,
         deleted=None))]
+    #[deprecated(note = "Use `list()` with `recursive=True` instead")]
     pub fn scan(
         &self,
         path: PathBuf,
@@ -815,7 +811,6 @@ impl PyAsyncOperator {
     /// -------
     /// AsyncOperator
     ///     The new async operator.
-    #[gen_stub(skip)]
     #[new]
     #[pyo3(signature = (scheme, * ,**kwargs))]
     pub fn new(py: Python, scheme: &str, kwargs: Option<&Bound<PyDict>>) -> PyResult<Self> {
@@ -1501,10 +1496,6 @@ impl PyAsyncOperator {
 
     /// Recursively list entries in the given directory.
     ///
-    /// Deprecated
-    /// ----------
-    ///     Use `list()` with `recursive=True` instead.
-    ///
     /// Parameters
     /// ----------
     /// path : str
@@ -1526,12 +1517,12 @@ impl PyAsyncOperator {
         type_repr="collections.abc.Awaitable[collections.abc.AsyncIterable[opendal.types.Entry]]",
         imports=("collections.abc", "opendal")
     ))]
-    #[gen_stub(skip)]
     #[pyo3(signature = (path, *,
         limit=None,
         start_after=None,
         versions=None,
         deleted=None))]
+    #[deprecated(note = "Use `list()` with `recursive=True` instead")]
     pub fn scan<'p>(
         &'p self,
         py: Python<'p>,

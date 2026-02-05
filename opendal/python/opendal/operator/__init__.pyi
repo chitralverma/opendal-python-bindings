@@ -25,6 +25,8 @@ import os
 import pathlib
 import typing
 
+import typing_extensions
+
 import opendal
 
 __all__ = [
@@ -44,6 +46,22 @@ class AsyncOperator:
     Operator
     """
 
+    def __new__(cls, scheme: builtins.str, **kwargs: typing.Any) -> AsyncOperator:
+        r"""
+        Create a new `AsyncOperator`.
+
+        Parameters
+        ----------
+        scheme : str
+            The scheme of the service.
+        **kwargs : dict
+            The options for the service.
+
+        Returns
+        -------
+        AsyncOperator
+            The new async operator.
+        """
     def layer(self, layer: typing.Any) -> AsyncOperator:
         r"""
         Add a new layer to the operator.
@@ -402,6 +420,37 @@ class AsyncOperator:
         coroutine
             An awaitable that returns an async iterator over the entries.
         """
+    @typing_extensions.deprecated("Use `list()` with `recursive=True` instead")
+    def scan(
+        self,
+        path: builtins.str | os.PathLike | pathlib.Path,
+        *,
+        limit: builtins.int | None = None,
+        start_after: builtins.str | None = None,
+        versions: builtins.bool | None = None,
+        deleted: builtins.bool | None = None,
+    ) -> collections.abc.Awaitable[collections.abc.AsyncIterable[opendal.types.Entry]]:
+        r"""
+        Recursively list entries in the given directory.
+
+        Parameters
+        ----------
+        path : str
+            The path to the directory.
+        limit : int, optional
+            The maximum number of entries to return.
+        start_after : str, optional
+            The entry to start after.
+        versions : bool, optional
+            Whether to list versions.
+        deleted : bool, optional
+            Whether to list deleted entries.
+
+        Returns
+        -------
+        coroutine
+            An awaitable that returns an async iterator over the entries.
+        """
     def presign_stat(
         self,
         path: builtins.str | os.PathLike | pathlib.Path,
@@ -513,6 +562,22 @@ class Operator:
     AsyncOperator
     """
 
+    def __new__(cls, scheme: builtins.str, **kwargs: typing.Any) -> Operator:
+        r"""
+        Create a new blocking `Operator`.
+
+        Parameters
+        ----------
+        scheme : str
+            The scheme of the service.
+        **kwargs : dict
+            The options for the service.
+
+        Returns
+        -------
+        Operator
+            The new operator.
+        """
     def layer(self, layer: typing.Any) -> Operator:
         r"""
         Add a new layer to this operator.
@@ -819,6 +884,7 @@ class Operator:
         BlockingLister
             An iterator over the entries in the directory.
         """
+    @typing_extensions.deprecated("Use `list()` with `recursive=True` instead")
     def scan(
         self,
         path: builtins.str | os.PathLike | pathlib.Path,
@@ -830,10 +896,6 @@ class Operator:
     ) -> collections.abc.Iterable[opendal.types.Entry]:
         r"""
         Recursively list entries in the given directory.
-
-        Deprecated
-        ----------
-            Use `list()` with `recursive=True` instead.
 
         Parameters
         ----------
